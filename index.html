@@ -1,0 +1,1613 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Lumen · Analytics dashboard (демо)</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Демо аналитического дашборда для SaaS: MRR, конверсии, когортная аналитика, гео, каналы. Frontend-портфолио.">
+<link rel="icon" type="image/png" href="icons/lumen-logo.png">
+<link rel="apple-touch-icon" href="icons/lumen-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#f3f6f9;
+  --surface:#fff;
+  --surface-2:#fafcfd;
+  --border:#e3e9ee;
+  --border-strong:#cdd6dd;
+  --ink:#0b1822;
+  --ink-2:#1d2b36;
+  --mut:#5e6e7d;
+  --faint:#9aa7b3;
+  --accent:#0d9488;
+  --accent-2:#0f766e;
+  --accent-soft:#ccfbf1;
+  --accent-glow:rgba(13,148,136,.15);
+  --cyan:#06b6d4;
+  --blue:#3b82f6;
+  --violet:#8b5cf6;
+  --pink:#ec4899;
+  --amber:#f59e0b;
+  --green:#10b981;
+  --red:#ef4444;
+  --green-soft:#dcfce7;
+  --red-soft:#fee2e2;
+  --amber-soft:#fef3c7;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+  --sans:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  --shadow-sm:0 1px 2px rgba(11,24,34,.04),0 1px 1px rgba(11,24,34,.03);
+  --shadow-md:0 8px 24px -10px rgba(11,24,34,.10),0 2px 6px rgba(11,24,34,.04);
+}
+html{-webkit-text-size-adjust:100%}
+body{font-family:var(--sans);background:var(--bg);color:var(--ink);font-size:14.5px;line-height:1.5;-webkit-font-smoothing:antialiased;letter-spacing:-.005em;min-height:100vh}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select{font-family:inherit}
+a{color:inherit;text-decoration:none}
+.mono{font-family:var(--mono);font-size:12.5px;letter-spacing:-.01em;font-feature-settings:'tnum' 1}
+
+.app{display:grid;grid-template-columns:240px 1fr;min-height:100vh;background:linear-gradient(90deg,#fff 0,#fff 240px,var(--bg) 240px)}
+
+/* SIDEBAR */
+.side{background:#fff;border-right:1px solid var(--border);padding:18px 14px;display:flex;flex-direction:column;gap:2px;position:sticky;top:0;height:100vh;overflow-y:auto}
+.side .brand{display:flex;align-items:center;gap:10px;padding:6px 10px 22px;font-weight:700;font-size:17px;letter-spacing:-.025em;color:var(--ink)}
+.side .brand .logo{width:36px;height:36px;border-radius:9px;overflow:hidden;flex:none;box-shadow:0 6px 16px -6px rgba(13,148,136,.45)}
+.side .brand .logo img{width:100%;height:100%;display:block;object-fit:cover}
+.side .brand small{font-size:10.5px;color:var(--mut);font-weight:500;display:block;margin-top:1px;letter-spacing:.02em;text-transform:uppercase}
+.side .lbl{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);padding:14px 12px 6px}
+.side a.nav{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:8px;font-size:14px;color:var(--ink-2);transition:background .15s,color .15s;font-weight:500;letter-spacing:-.01em}
+.side a.nav svg{width:18px;height:18px;flex:none;stroke:var(--mut);stroke-width:1.7;fill:none;transition:stroke .15s}
+.side a.nav:hover{background:var(--accent-soft);color:var(--accent-2)}
+.side a.nav:hover svg{stroke:var(--accent-2)}
+.side a.nav.on{background:var(--accent-soft);color:var(--accent-2);font-weight:600}
+.side a.nav.on svg{stroke:var(--accent-2)}
+.side a.nav .pill{margin-left:auto;font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:100px;background:var(--accent);color:#fff}
+.side .foot{margin-top:auto;padding-top:14px;border-top:1px solid var(--border)}
+.side .user{display:flex;align-items:center;gap:10px;padding:8px 10px}
+.side .user .ava{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#06b6d4,#3b82f6);display:grid;place-items:center;font-weight:700;font-size:11.5px;color:#fff;flex:none}
+.side .user b{font-size:13px;color:var(--ink);font-weight:600;display:block;letter-spacing:-.01em}
+.side .user small{font-size:11.5px;color:var(--mut)}
+
+.main{display:flex;flex-direction:column;min-width:0}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;height:60px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:30}
+.crumb{display:flex;align-items:center;gap:8px;color:var(--mut);font-size:13px;font-weight:500}
+.crumb b{color:var(--ink);font-weight:600}
+.crumb .sep{color:var(--faint)}
+.search{position:relative;flex:1;max-width:360px;margin-left:14px}
+.search input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:8px 12px 8px 34px;font-size:13px;color:var(--ink);transition:.2s}
+.search input:focus{outline:none;border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px var(--accent-glow)}
+.search svg{position:absolute;left:11px;top:9px;width:14px;height:14px;stroke:var(--faint);stroke-width:1.8;fill:none}
+.search kbd{position:absolute;right:10px;top:9px;font-family:var(--mono);font-size:10.5px;color:var(--mut);background:#fff;border:1px solid var(--border);border-radius:5px;padding:1px 6px}
+.top-actions{margin-left:auto;display:flex;align-items:center;gap:8px}
+.period{display:flex;gap:2px;background:var(--bg);padding:3px;border-radius:8px}
+.period button{font-size:12px;font-weight:500;color:var(--mut);padding:5px 10px;border-radius:6px;transition:.15s}
+.period button.on{background:#fff;color:var(--ink);font-weight:600;box-shadow:var(--shadow-sm)}
+.period button:hover:not(.on){color:var(--ink)}
+.icon-btn{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;color:var(--mut);transition:.15s;position:relative}
+.icon-btn:hover{background:var(--bg);color:var(--ink)}
+.icon-btn svg{width:17px;height:17px;stroke:currentColor;stroke-width:1.7;fill:none}
+.icon-btn .dot{position:absolute;top:7px;right:8px;width:7px;height:7px;border-radius:50%;background:var(--red);border:2px solid var(--surface)}
+.btn{display:inline-flex;align-items:center;gap:7px;font-weight:600;font-size:13px;border-radius:9px;padding:8px 13px;border:1px solid transparent;cursor:pointer;transition:.2s;letter-spacing:-.01em;line-height:1}
+.btn svg{width:14px;height:14px;stroke:currentColor;stroke-width:2;fill:none;flex:none}
+.btn-pri{background:linear-gradient(135deg,#14b8a6,#0d9488);color:#fff;box-shadow:0 4px 12px -4px rgba(13,148,136,.45)}
+.btn-pri:hover{transform:translateY(-1px);box-shadow:0 8px 20px -6px rgba(13,148,136,.55)}
+.btn-ghost{background:#fff;color:var(--ink);border-color:var(--border)}
+.btn-ghost:hover{border-color:var(--ink)}
+
+/* CONTENT */
+.content{padding:24px 28px 56px;display:flex;flex-direction:column;gap:18px}
+.page-head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.page-head h1{font-size:24px;font-weight:700;letter-spacing:-.03em}
+.page-head .greet{font-size:13px;color:var(--mut);margin-top:3px}
+.page-head .greet b{color:var(--accent-2);font-weight:600}
+
+/* KPI strip */
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+.kpis.k4{grid-template-columns:repeat(4,1fr)}
+.kpi{background:#fff;border:1px solid var(--border);border-radius:13px;padding:16px 16px 14px;position:relative;overflow:hidden;transition:.2s;cursor:pointer}
+.kpi:hover{transform:translateY(-1px);border-color:var(--border-strong);box-shadow:var(--shadow-md)}
+.kpi .top{display:flex;align-items:center;gap:8px;color:var(--mut);font-size:12px;font-weight:500;margin-bottom:8px}
+.kpi .top .ico{width:24px;height:24px;border-radius:7px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent-2)}
+.kpi .top .ico svg{width:13px;height:13px;stroke:currentColor;stroke-width:2;fill:none}
+.kpi .val{font-size:24px;font-weight:700;letter-spacing:-.03em;line-height:1;font-feature-settings:'tnum' 1}
+.kpi .val small{font-size:13px;font-weight:500;color:var(--mut);margin-left:3px}
+.kpi .meta{display:flex;align-items:center;gap:8px;margin-top:8px}
+.kpi .delta{display:inline-flex;align-items:center;gap:3px;font-size:11.5px;font-weight:600;padding:2px 7px;border-radius:100px}
+.kpi .delta.up{color:var(--green);background:var(--green-soft)}
+.kpi .delta.down{color:var(--red);background:var(--red-soft)}
+.kpi .vs{font-size:11.5px;color:var(--faint)}
+.kpi .spark{position:absolute;right:14px;top:14px;width:60px;height:24px}
+.kpi .spark svg{width:100%;height:100%;display:block}
+@media(max-width:1300px){.kpis,.kpis.k4{grid-template-columns:repeat(3,1fr)}.kpi .spark{display:none}}
+@media(max-width:760px){.kpis,.kpis.k4{grid-template-columns:1fr 1fr}}
+
+/* main grid */
+.grid-2{display:grid;grid-template-columns:1.6fr 1fr;gap:16px}
+.grid-2eq{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+@media(max-width:1100px){.grid-2,.grid-2eq,.grid-3{grid-template-columns:1fr}}
+
+.card{background:#fff;border:1px solid var(--border);border-radius:13px;overflow:hidden}
+.card-h{display:flex;align-items:flex-start;justify-content:space-between;padding:18px 20px 14px;gap:12px}
+.card-h h3{font-size:15.5px;font-weight:700;letter-spacing:-.02em}
+.card-h .sub{font-size:12.5px;color:var(--mut);margin-top:3px;letter-spacing:-.005em}
+.card-h .tabs{display:flex;gap:2px;background:var(--bg);padding:3px;border-radius:8px}
+.card-h .tabs button{font-size:11.5px;font-weight:500;color:var(--mut);padding:5px 10px;border-radius:6px;transition:.15s}
+.card-h .tabs button.on{background:#fff;color:var(--ink);font-weight:600;box-shadow:var(--shadow-sm)}
+.card-body{padding:0 20px 20px}
+
+/* big chart */
+.chart-card{padding-bottom:8px}
+.chart-legend{display:flex;align-items:center;gap:16px;padding:0 20px 12px;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--mut)}
+.legend-item b{color:var(--ink);font-weight:600;font-feature-settings:'tnum' 1}
+.legend-dot{width:9px;height:9px;border-radius:3px}
+.chart-wrap{position:relative;padding:0 12px 18px}
+.chart-wrap svg{width:100%;height:240px;display:block;overflow:visible}
+#mrrChartHost svg{height:380px}
+.chart-wrap.tall svg{height:300px}
+.chart-x{display:flex;justify-content:space-between;font-size:10.5px;color:var(--faint);padding:6px 8px 0;font-family:var(--mono)}
+.chart-tooltip{position:absolute;top:8px;padding:10px 12px;background:#0b1822;color:#fff;border-radius:8px;font-size:11.5px;pointer-events:none;opacity:0;transition:opacity .12s,left .08s;box-shadow:0 10px 28px -8px rgba(11,24,34,.45);min-width:180px;z-index:20;letter-spacing:-.005em}
+.chart-tooltip .d{font-size:10.5px;color:#9aa7b3;font-weight:600;font-family:var(--mono);margin-bottom:7px;letter-spacing:.04em;text-transform:uppercase}
+.chart-tooltip .r{display:flex;align-items:center;gap:7px;padding:2px 0;font-size:12px;color:#cdd6dd;font-weight:500}
+.chart-tooltip .r .dt{width:9px;height:9px;border-radius:2px;flex:none}
+.chart-tooltip .r b{margin-left:auto;font-family:var(--mono);font-feature-settings:'tnum' 1;color:#fff;font-weight:600}
+#mrrChartHost svg .mrr-dot{transition:opacity .1s}
+#mrrChartHost svg .hover-line{transition:opacity .1s}
+
+/* funnel */
+.funnel{padding:4px 20px 20px}
+.funnel-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border)}
+.funnel-row:last-child{border-bottom:none}
+.funnel-row .label{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
+.funnel-row .label b{font-size:13.5px;font-weight:600;color:var(--ink);letter-spacing:-.01em}
+.funnel-row .label small{font-size:11.5px;color:var(--mut)}
+.funnel-bar{flex:1.4;height:28px;background:var(--bg);border-radius:7px;overflow:hidden;position:relative}
+.funnel-bar i{position:absolute;left:0;top:0;height:100%;border-radius:7px;background:linear-gradient(90deg,#14b8a6,#0d9488);width:0;transition:width 1.2s cubic-bezier(.2,.7,.2,1)}
+.funnel-bar.blue i{background:linear-gradient(90deg,#06b6d4,#0891b2)}
+.funnel-bar.violet i{background:linear-gradient(90deg,#8b5cf6,#7c3aed)}
+.funnel-bar.amber i{background:linear-gradient(90deg,#fbbf24,#d97706)}
+.funnel-bar span{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:11.5px;font-weight:700;color:#0b1822;font-family:var(--mono);z-index:1;text-shadow:0 0 3px rgba(255,255,255,.7),0 0 6px rgba(255,255,255,.5)}
+.funnel-row .conv{min-width:50px;text-align:right;font-size:11.5px;font-weight:600;color:var(--accent-2);font-family:var(--mono)}
+.funnel-row .conv.down{color:var(--red)}
+
+/* cohort heatmap */
+.cohort{padding:8px 20px 20px;overflow-x:auto}
+.cohort table{border-collapse:collapse;width:100%;font-size:11.5px;font-family:var(--mono);font-feature-settings:'tnum' 1}
+.cohort th{padding:8px 6px;color:var(--mut);font-weight:500;text-align:center;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em}
+.cohort th.first{text-align:left;color:var(--ink-2);font-weight:600;font-size:11px;text-transform:none;letter-spacing:0}
+.cohort td{padding:7px 4px;text-align:center;color:var(--ink);font-weight:600;border-radius:4px;position:relative}
+.cohort td.first{text-align:left;color:var(--ink-2);font-weight:500;padding-right:10px}
+.cohort td.h0{background:#f8fafc;color:var(--faint)}
+.cohort td.h1{background:#ccfbf1;color:#0f766e}
+.cohort td.h2{background:#5eead4;color:#0a4d44}
+.cohort td.h3{background:#14b8a6;color:#fff}
+.cohort td.h4{background:#0d9488;color:#fff}
+.cohort td.h5{background:#0f766e;color:#fff}
+.cohort .users{color:var(--mut);font-weight:500}
+
+/* geo donut */
+.geo-card{padding:14px 20px 20px}
+.geo-row{display:flex;align-items:center;gap:20px}
+.donut-wrap{width:140px;height:140px;position:relative;flex:none}
+.donut-wrap svg{transform:rotate(-90deg);width:100%;height:100%}
+.donut-wrap .center{position:absolute;inset:0;display:grid;place-items:center;text-align:center}
+.donut-wrap .center .lbl{font-size:11px;color:var(--mut);font-weight:500}
+.donut-wrap .center .num{font-size:24px;font-weight:700;letter-spacing:-.025em;line-height:1;margin-top:2px}
+.geo-list{flex:1;display:flex;flex-direction:column;gap:8px}
+.geo-item{display:flex;align-items:center;gap:10px;font-size:13px}
+.geo-item .dot{width:10px;height:10px;border-radius:3px;flex:none}
+.geo-item b{color:var(--ink);font-weight:500;flex:1}
+.geo-item .num{font-family:var(--mono);font-weight:600;font-size:12.5px}
+.geo-item .pct{font-size:11.5px;color:var(--mut);min-width:40px;text-align:right}
+
+/* channels */
+.ch-tbl{width:100%;border-collapse:collapse;font-size:13px}
+.ch-tbl tr{border-bottom:1px solid var(--border)}
+.ch-tbl tr:last-child{border-bottom:none}
+.ch-tbl td{padding:11px 20px;color:var(--ink-2)}
+.ch-tbl td.r{text-align:right;font-family:var(--mono);font-weight:600;color:var(--ink);font-feature-settings:'tnum' 1}
+.ch-tbl .ico{width:28px;height:28px;border-radius:7px;display:inline-grid;place-items:center;vertical-align:middle;margin-right:10px;background:#fff;border:1px solid var(--border);overflow:hidden}
+.ch-tbl .ico img{width:18px;height:18px;display:block;object-fit:contain}
+.ch-tbl b{font-weight:600;color:var(--ink);vertical-align:middle}
+.ch-tbl small{display:block;color:var(--mut);font-weight:400;font-size:11.5px;margin-left:36px;margin-top:1px}
+.ch-tbl .delta{font-size:11px;font-weight:600;padding:2px 6px;border-radius:100px;font-family:var(--mono)}
+.ch-tbl .delta.up{color:var(--green);background:var(--green-soft)}
+.ch-tbl .delta.down{color:var(--red);background:var(--red-soft)}
+
+/* activity feed */
+.feed{padding:6px 20px 18px;display:flex;flex-direction:column;gap:14px;max-height:280px;overflow-y:auto}
+.feed-item{display:flex;gap:12px;align-items:flex-start}
+.feed-ico{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;flex:none;font-size:12px;font-weight:700;color:#fff;font-family:var(--mono)}
+.feed-text{flex:1;font-size:13px;line-height:1.45;color:var(--ink-2)}
+.feed-text b{color:var(--ink);font-weight:600}
+.feed-text .meta{font-size:11.5px;color:var(--mut);margin-top:2px}
+.feed-text .meta .tag{display:inline-block;font-size:10.5px;font-weight:600;padding:1px 7px;border-radius:100px;background:var(--accent-soft);color:var(--accent-2);margin-left:6px}
+.feed-text .meta .tag.up{background:var(--green-soft);color:var(--green)}
+.feed-text .meta .tag.churn{background:var(--red-soft);color:var(--red)}
+
+/* sparkline colours */
+.s-teal{stroke:#0d9488}
+.s-blue{stroke:#3b82f6}
+.s-violet{stroke:#8b5cf6}
+.s-amber{stroke:#f59e0b}
+.s-pink{stroke:#ec4899}
+
+.reveal{opacity:0;transform:translateY(10px);transition:opacity .65s cubic-bezier(.2,.7,.2,1),transform .65s cubic-bezier(.2,.7,.2,1)}
+.reveal.in{opacity:1;transform:none}
+
+/* settings form */
+.settings-card{background:#fff;border:1px solid var(--border);border-radius:13px;padding:24px 26px;max-width:680px}
+.settings-card h3{font-size:17px;font-weight:700;margin-bottom:18px;letter-spacing:-.02em}
+.set-row{display:grid;grid-template-columns:200px 1fr;gap:18px;padding:14px 0;border-bottom:1px solid var(--border);align-items:center}
+.set-row:last-of-type{border-bottom:none}
+.set-row .lbl{font-size:13px;color:var(--mut);font-weight:500}
+.set-row .lbl b{display:block;color:var(--ink);font-weight:600;font-size:14px;margin-bottom:2px}
+.set-row input,.set-row select{width:100%;background:#fff;border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13.5px;color:var(--ink)}
+.set-row input:focus,.set-row select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+.toggle{display:inline-flex;align-items:center;gap:10px;cursor:pointer}
+.toggle input{display:none}
+.toggle .switch{width:38px;height:22px;border-radius:100px;background:var(--border-strong);position:relative;transition:.2s}
+.toggle .switch::after{content:"";position:absolute;left:2px;top:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:var(--shadow-sm);transition:.2s}
+.toggle input:checked + .switch{background:var(--accent)}
+.toggle input:checked + .switch::after{transform:translateX(16px)}
+.set-actions{display:flex;gap:10px;margin-top:18px;justify-content:flex-end}
+
+/* reports list */
+.reports-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:1100px){.reports-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:760px){.reports-grid{grid-template-columns:1fr}}
+.rep-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:18px;cursor:pointer;transition:.2s}
+.rep-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.rep-card .ico{width:34px;height:34px;border-radius:9px;background:var(--accent-soft);color:var(--accent-2);display:grid;place-items:center;margin-bottom:12px}
+.rep-card .ico svg{width:18px;height:18px;stroke:currentColor;stroke-width:1.8;fill:none}
+.rep-card b{font-size:14px;font-weight:600;letter-spacing:-.01em;display:block}
+.rep-card small{font-size:11.5px;color:var(--mut);display:block;margin-top:4px}
+.rep-card .meta{font-size:11.5px;color:var(--faint);margin-top:14px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--border);padding-top:10px}
+
+/* experiments */
+.exp-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:12px}
+.exp-card .head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.exp-card h4{font-size:14.5px;font-weight:600;letter-spacing:-.01em}
+.exp-card .head small{font-size:11.5px;color:var(--mut);display:block;margin-top:2px}
+.exp-card .pill{font-size:11px;font-weight:600;padding:3px 9px;border-radius:100px}
+.exp-card .pill.running{background:var(--accent-soft);color:var(--accent-2)}
+.exp-card .pill.won{background:var(--green-soft);color:var(--green)}
+.exp-card .pill.lost{background:var(--red-soft);color:var(--red)}
+.exp-bars{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.exp-var{background:var(--bg);padding:12px;border-radius:9px}
+.exp-var .name{font-size:11px;color:var(--mut);font-weight:600;letter-spacing:.03em;text-transform:uppercase}
+.exp-var .conv{font-size:20px;font-weight:700;letter-spacing:-.025em;font-family:var(--mono);margin-top:4px}
+.exp-var .delta{font-size:11.5px;font-weight:600;color:var(--green);margin-top:2px}
+.exp-var.win{background:var(--green-soft)}
+.exp-var.win .delta{color:var(--green)}
+
+/* integrations */
+.int-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:1100px){.int-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:760px){.int-grid{grid-template-columns:1fr}}
+.int-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:18px;display:flex;align-items:center;gap:14px}
+.int-logo{width:42px;height:42px;border-radius:10px;display:grid;place-items:center;background:#fff;border:1px solid var(--border);flex:none;overflow:hidden}
+.int-logo img{width:24px;height:24px;display:block;object-fit:contain}
+.int-card{cursor:pointer}
+.int-card.off{opacity:.72}
+.int-card.off .int-logo{filter:grayscale(.7)}
+.int-card .info{flex:1;min-width:0}
+.int-card b{font-size:13.5px;font-weight:600;display:block;letter-spacing:-.01em}
+.int-card small{font-size:11.5px;color:var(--mut);display:block;margin-top:2px}
+.int-card .status{font-size:11px;font-weight:600;padding:3px 9px;border-radius:100px;background:var(--green-soft);color:var(--green);flex:none}
+.int-card .status.off{background:var(--bg);color:var(--mut)}
+
+/* utm / generic table */
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl thead th{padding:11px 20px;text-align:left;color:var(--mut);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;background:var(--surface-2);border-bottom:1px solid var(--border)}
+.tbl thead th.r{text-align:right}
+.tbl tbody tr{border-bottom:1px solid var(--border)}
+.tbl tbody tr:last-child{border-bottom:none}
+.tbl tbody tr:hover{background:var(--surface-2)}
+.tbl td{padding:11px 20px;color:var(--ink-2)}
+.tbl td.r{text-align:right;font-family:var(--mono);font-weight:600;color:var(--ink);font-feature-settings:'tnum' 1}
+.tbl td.b{font-weight:600;color:var(--ink)}
+.tbl .pill{display:inline-block;font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:100px;font-family:var(--mono)}
+.tbl .pill.g{background:var(--green-soft);color:var(--green)}
+.tbl .pill.r{background:var(--red-soft);color:var(--red)}
+.tbl .pill.a{background:var(--amber-soft);color:#b45309}
+.tbl .pill.t{background:var(--accent-soft);color:var(--accent-2)}
+
+/* churn reasons / bar list */
+.bar-list{padding:8px 20px 20px;display:flex;flex-direction:column;gap:11px}
+.bar-row{display:grid;grid-template-columns:170px 1fr 60px;gap:14px;align-items:center;font-size:13px}
+.bar-row .name{color:var(--ink-2);font-weight:500;font-size:13px;display:flex;align-items:center;gap:8px}
+.bar-row .name .dot{width:9px;height:9px;border-radius:3px;flex:none}
+.bar-row .track{height:10px;background:var(--bg);border-radius:6px;overflow:hidden;position:relative}
+.bar-row .track i{position:absolute;left:0;top:0;height:100%;background:linear-gradient(90deg,#0d9488,#14b8a6);width:0;transition:width 1.2s cubic-bezier(.2,.7,.2,1);border-radius:6px}
+.bar-row .track i.red{background:linear-gradient(90deg,#ef4444,#dc2626)}
+.bar-row .track i.amber{background:linear-gradient(90deg,#f59e0b,#d97706)}
+.bar-row .track i.violet{background:linear-gradient(90deg,#8b5cf6,#7c3aed)}
+.bar-row .track i.blue{background:linear-gradient(90deg,#3b82f6,#2563eb)}
+.bar-row .v{font-family:var(--mono);font-weight:600;font-size:12.5px;text-align:right;color:var(--ink);font-feature-settings:'tnum' 1}
+
+/* retention curve mini */
+.ret-curve{padding:8px 20px 20px}
+.ret-curve svg{width:100%;height:200px;display:block}
+
+/* country bubble cards */
+.country-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:14px 20px 20px}
+@media(max-width:1100px){.country-cards{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.country-cards{grid-template-columns:1fr}}
+.cc{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;transition:.2s;position:relative;overflow:hidden}
+.cc:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.cc .flag{font-size:26px;line-height:1;margin-bottom:8px}
+.cc .nm{font-size:13px;font-weight:600;color:var(--ink);letter-spacing:-.01em}
+.cc .nm small{display:block;font-size:11px;color:var(--mut);font-weight:500;margin-top:1px}
+.cc .vv{font-size:22px;font-weight:700;letter-spacing:-.025em;margin-top:8px;font-feature-settings:'tnum' 1;color:var(--ink)}
+.cc .vv small{font-size:11.5px;color:var(--mut);font-weight:500;margin-left:4px}
+.cc .gr{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:100px;background:var(--green-soft);color:var(--green);margin-top:6px;font-family:var(--mono)}
+.cc .gr.s{background:var(--accent-soft);color:var(--accent-2)}
+.cc .bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:10px;position:relative}
+.cc .bar i{position:absolute;left:0;top:0;height:100%;background:linear-gradient(90deg,#14b8a6,#0d9488);border-radius:3px;width:0;transition:width 1.2s cubic-bezier(.2,.7,.2,1)}
+
+/* toast */
+.toast{position:fixed;top:74px;right:24px;background:var(--ink);color:#fff;padding:11px 16px;border-radius:10px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:9px;box-shadow:0 10px 32px -10px rgba(11,24,34,.45);opacity:0;transform:translateY(-8px);transition:.25s cubic-bezier(.2,.7,.2,1);z-index:1000;pointer-events:none;letter-spacing:-.01em}
+.toast.on{opacity:1;transform:translateY(0)}
+.toast svg{width:16px;height:16px;stroke:#5eead4;stroke-width:2.4;fill:none}
+
+/* notifications dropdown */
+.notif-wrap{position:relative}
+.notif-pop{position:absolute;top:42px;right:0;width:340px;background:#fff;border:1px solid var(--border);border-radius:13px;box-shadow:0 12px 36px -12px rgba(11,24,34,.18),0 4px 12px rgba(11,24,34,.06);padding:8px 0;opacity:0;transform:translateY(-6px);pointer-events:none;transition:.2s;z-index:60}
+.notif-pop.on{opacity:1;transform:translateY(0);pointer-events:auto}
+.notif-pop h4{font-size:13px;font-weight:700;padding:12px 16px 8px;letter-spacing:-.01em;display:flex;align-items:center;justify-content:space-between}
+.notif-pop h4 small{font-size:11px;font-weight:500;color:var(--accent-2);cursor:pointer}
+.notif-pop .ni{display:flex;gap:11px;padding:10px 16px;align-items:flex-start;border-top:1px solid var(--border);transition:.15s;cursor:pointer}
+.notif-pop .ni:hover{background:var(--surface-2)}
+.notif-pop .ni .ico{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:11px;font-weight:700;flex:none;font-family:var(--mono)}
+.notif-pop .ni .tx{flex:1;font-size:12.5px;line-height:1.4;color:var(--ink-2)}
+.notif-pop .ni .tx b{color:var(--ink);font-weight:600}
+.notif-pop .ni .tx small{display:block;font-size:11px;color:var(--mut);margin-top:2px}
+.notif-pop .unread{width:7px;height:7px;border-radius:50%;background:var(--accent);flex:none;margin-top:9px}
+
+/* modal */
+.modal-bg{position:fixed;inset:0;background:rgba(11,24,34,.48);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;z-index:200;padding:24px;opacity:0;transition:.2s}
+.modal-bg.on{display:flex;opacity:1}
+.modal{background:#fff;border-radius:16px;max-width:560px;width:100%;max-height:88vh;overflow:auto;box-shadow:0 30px 80px -20px rgba(11,24,34,.45);transform:translateY(10px) scale(.98);transition:.22s cubic-bezier(.2,.7,.2,1)}
+.modal-bg.on .modal{transform:none}
+.modal-h{display:flex;align-items:center;justify-content:space-between;padding:20px 22px 14px;border-bottom:1px solid var(--border)}
+.modal-h h3{font-size:17px;font-weight:700;letter-spacing:-.02em}
+.modal-h small{display:block;font-size:12px;color:var(--mut);margin-top:3px;font-weight:500}
+.modal-close{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;color:var(--mut);transition:.15s}
+.modal-close:hover{background:var(--bg);color:var(--ink)}
+.modal-close svg{width:16px;height:16px;stroke:currentColor;stroke-width:2;fill:none}
+.modal-b{padding:20px 22px}
+.modal-b p{font-size:13.5px;color:var(--ink-2);line-height:1.55;margin-bottom:12px}
+.modal-b .prev{background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:16px;margin:10px 0 16px}
+.modal-b .prev svg{width:100%;height:160px;display:block}
+.modal-b .row{display:grid;grid-template-columns:140px 1fr;gap:14px;padding:8px 0;font-size:13px;border-bottom:1px solid var(--border)}
+.modal-b .row:last-child{border-bottom:none}
+.modal-b .row .l{color:var(--mut);font-weight:500}
+.modal-b .row .v{color:var(--ink);font-weight:600}
+.modal-b label{display:block;font-size:12px;font-weight:600;color:var(--mut);margin:10px 0 6px;letter-spacing:.02em;text-transform:uppercase}
+.modal-b input,.modal-b select,.modal-b textarea{width:100%;background:#fff;border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13.5px;color:var(--ink);font-family:inherit}
+.modal-b input:focus,.modal-b select:focus,.modal-b textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+.modal-f{padding:14px 22px 20px;display:flex;justify-content:flex-end;gap:10px;border-top:1px solid var(--border)}
+
+/* nps gauge */
+.nps-wrap{padding:14px 20px 20px;display:flex;align-items:center;gap:24px}
+.nps-gauge{width:170px;height:110px;position:relative;flex:none}
+.nps-gauge svg{width:100%;height:100%;display:block;overflow:visible}
+.nps-side{flex:1;display:flex;flex-direction:column;gap:10px;font-size:13px}
+.nps-row{display:flex;align-items:center;gap:10px;justify-content:space-between}
+.nps-row b{color:var(--ink);font-weight:600}
+.nps-row .n{font-family:var(--mono);font-weight:600;font-size:13px}
+.nps-row .bar{height:6px;flex:1;background:var(--bg);border-radius:4px;overflow:hidden;margin:0 8px;position:relative;max-width:170px}
+.nps-row .bar i{position:absolute;left:0;top:0;height:100%;border-radius:4px;width:0;transition:width 1.2s cubic-bezier(.2,.7,.2,1)}
+
+/* winback list */
+.wb-list{padding:6px 20px 18px;display:flex;flex-direction:column;gap:10px;max-height:340px;overflow-y:auto}
+.wb-item{display:flex;align-items:center;gap:12px;padding:11px 12px;border:1px solid var(--border);border-radius:10px;transition:.2s}
+.wb-item:hover{border-color:var(--accent);box-shadow:var(--shadow-sm)}
+.wb-item .ava{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#ec4899,#db2777);color:#fff;font-weight:700;font-size:12px;display:grid;place-items:center;flex:none;font-family:var(--mono)}
+.wb-item .info{flex:1;min-width:0}
+.wb-item .info b{font-size:13px;font-weight:600;color:var(--ink);display:block;letter-spacing:-.01em}
+.wb-item .info small{font-size:11.5px;color:var(--mut);display:block;margin-top:1px}
+.wb-item .amt{font-family:var(--mono);font-weight:600;color:var(--red);font-size:12.5px;margin-right:8px}
+.wb-item .btn-mini{font-size:11.5px;font-weight:600;padding:6px 11px;border-radius:7px;background:var(--accent-soft);color:var(--accent-2);transition:.15s}
+.wb-item .btn-mini:hover{background:var(--accent);color:#fff}
+
+/* multi funnel grid */
+.multi-funnel{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:1100px){.multi-funnel{grid-template-columns:1fr}}
+
+/* cohorts page extras */
+.cohort-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:18px 20px 0}
+.cohort-stat{background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+.cohort-stat .l{font-size:11px;color:var(--mut);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.cohort-stat .v{font-size:22px;font-weight:700;letter-spacing:-.025em;margin-top:4px;font-feature-settings:'tnum' 1}
+.cohort-stat .d{font-size:11px;font-weight:500;color:var(--mut);margin-top:2px}
+.cohort-stat .d.up{color:var(--green)}
+.cohort-stat .d.down{color:var(--red)}
+@media(max-width:760px){.cohort-stats{grid-template-columns:1fr 1fr}}
+
+/* CAC trend mini cards */
+.cac-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:1100px){.cac-grid{grid-template-columns:1fr}}
+.cac-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:18px}
+.cac-card .ch{font-size:13px;color:var(--mut);font-weight:500}
+.cac-card .ch b{color:var(--ink);font-weight:600}
+.cac-card .v{font-size:22px;font-weight:700;letter-spacing:-.025em;margin-top:6px;font-feature-settings:'tnum' 1}
+.cac-card .delta{display:inline-block;font-size:11px;font-weight:600;padding:2px 7px;border-radius:100px;margin-top:6px}
+.cac-card .delta.up{color:var(--green);background:var(--green-soft)}
+.cac-card .delta.down{color:var(--red);background:var(--red-soft)}
+.cac-card .spk{margin-top:10px;height:34px}
+.cac-card .spk svg{width:100%;height:100%}
+
+.foot{padding:18px 28px;color:var(--mut);font-size:12.5px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;border-top:1px solid var(--border);background:#fff}
+.foot a{color:var(--accent-2);font-weight:500}
+
+@media(max-width:760px){
+  .app{grid-template-columns:1fr;background:var(--bg)}
+  .side{display:none}
+  .content{padding:18px}
+  .topbar{padding:0 18px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- SIDEBAR -->
+<aside class="side">
+  <div class="brand">
+    <div class="logo"><img src="icons/lumen-logo.png" alt="Lumen"></div>
+    <div>Lumen<small>analytics</small></div>
+  </div>
+  <div class="lbl">Аналитика</div>
+  <a class="nav on" data-slug="overview" href="#overview"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Обзор</a>
+  <a class="nav" data-slug="acquisition" href="#acquisition"><svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8M21 7v5h-5"/></svg>Привлечение</a>
+  <a class="nav" data-slug="retention" href="#retention"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3 3-5 6-5s6 2 6 5"/><circle cx="18" cy="9" r="2"/></svg>Удержание<span class="pill">new</span></a>
+  <a class="nav" data-slug="funnels" href="#funnels"><svg viewBox="0 0 24 24"><path d="M3 3h18v4H3zM6 7v14h12V7"/></svg>Воронки</a>
+  <a class="nav" data-slug="cohorts" href="#cohorts"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg>Когорты</a>
+  <a class="nav" data-slug="geo" href="#geo"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2c2.5 3 4 7 4 10s-1.5 7-4 10c-2.5-3-4-7-4-10s1.5-7 4-10z"/></svg>География</a>
+  <div class="lbl">Управление</div>
+  <a class="nav" data-slug="reports" href="#reports"><svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6"/></svg>Отчёты</a>
+  <a class="nav" data-slug="experiments" href="#experiments"><svg viewBox="0 0 24 24"><path d="M4 17l6-6 4 4 8-8M21 7v5h-5"/></svg>Эксперименты</a>
+  <a class="nav" data-slug="integrations" href="#integrations"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7 0l4-4a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-4 4a5 5 0 0 0 7 7l1-1"/></svg>Интеграции</a>
+  <a class="nav" data-slug="settings" href="#settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.6-2-3.4-2.4 1a7 7 0 0 0-1.7-1L16.5 2h-4l-.3 2.6a7 7 0 0 0-1.7 1l-2.4-1-2 3.4L5.1 11a7 7 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 1.7 1l.3 2.6h4l.3-2.6a7 7 0 0 0 1.7-1l2.4 1 2-3.4-2-1.6a7 7 0 0 0 .1-1z"/></svg>Настройки</a>
+  <div class="foot">
+    <div class="user">
+      <span class="ava">МК</span>
+      <div><b>Mark K.</b><small>Lumen Team</small></div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <header class="topbar">
+    <div class="crumb">Workspace<span class="sep">/</span><b>Обзор</b></div>
+    <div class="search">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-5-5"/></svg>
+      <input placeholder="Найти метрику, дашборд, юзера…">
+      <kbd>⌘ K</kbd>
+    </div>
+    <div class="top-actions">
+      <div class="period">
+        <button>24Ч</button>
+        <button>7Д</button>
+        <button class="on">30Д</button>
+        <button>90Д</button>
+        <button>Год</button>
+      </div>
+      <button class="icon-btn" id="btnShare" title="Поделиться"><svg viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/></svg></button>
+      <div class="notif-wrap">
+        <button class="icon-btn" id="btnNotif" title="Уведомления"><svg viewBox="0 0 24 24"><path d="M18 16v-5a6 6 0 1 0-12 0v5l-2 3h16zM10 19a2 2 0 0 0 4 0"/></svg><span class="dot"></span></button>
+        <div class="notif-pop" id="notifPop">
+          <h4>Уведомления <small id="markRead">Отметить прочитанным</small></h4>
+          <div class="ni"><div class="ico" style="background:linear-gradient(135deg,#10b981,#059669)">+</div><div class="tx"><b>+$49 MRR</b> · новая Pro-подписка от Алексея К.<small>2 минуты назад</small></div><div class="unread"></div></div>
+          <div class="ni"><div class="ico" style="background:linear-gradient(135deg,#ef4444,#dc2626)">!</div><div class="tx"><b>Churn-алерт</b> · отток за день вырос до 1.4% (норма 0.8%)<small>14 минут назад</small></div><div class="unread"></div></div>
+          <div class="ni"><div class="ico" style="background:linear-gradient(135deg,#06b6d4,#0891b2)">↑</div><div class="tx"><b>Upgrade</b> Иван П. перешёл с Team на Business — +$120 expansion<small>7 минут назад</small></div><div class="unread"></div></div>
+          <div class="ni"><div class="ico" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed)">★</div><div class="tx"><b>Победитель A/B</b> · Pricing Var.B закрылся p&lt;0.01, +28% ARPU<small>вчера, 18:42</small></div></div>
+          <div class="ni"><div class="ico" style="background:linear-gradient(135deg,#f59e0b,#d97706)">⚙</div><div class="tx"><b>GA4 синхронизация</b> завершена · 248 новых сессий<small>вчера, 09:00</small></div></div>
+        </div>
+      </div>
+      <button class="btn btn-pri" id="btnNewReport"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Новый отчёт</button>
+      <div class="toast" id="toast"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg><span id="toastTxt">Готово</span></div>
+      <div class="modal-bg" id="modalBg">
+        <div class="modal" id="modal" role="dialog" aria-modal="true">
+          <div class="modal-h">
+            <div><h3 id="modalTitle">—</h3><small id="modalSub">—</small></div>
+            <button class="modal-close" id="modalClose" title="Закрыть"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+          </div>
+          <div class="modal-b" id="modalBody"></div>
+          <div class="modal-f" id="modalFoot"></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="content">
+    <div class="page-head reveal">
+      <div>
+        <h1>Обзор продукта</h1>
+        <div class="greet">Последние 30 дней · обновлено сейчас · <b>+18% MRR</b> к прошлому периоду</div>
+      </div>
+    </div>
+
+    <!-- ============ OVERVIEW ============ -->
+    <div class="kpis reveal" data-pages="overview">
+      <div class="kpi">
+        <div class="top"><span class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/></svg></span>MRR</div>
+        <div class="val">$<span data-count="84320">0</span></div>
+        <div class="meta"><span class="delta up">↑ 18.2%</span><span class="vs">vs 30д назад</span></div>
+        <div class="spark"><svg viewBox="0 0 60 24" preserveAspectRatio="none"><polyline class="s-teal" points="0,20 8,18 16,17 24,15 32,12 40,10 48,7 56,5 60,4" fill="none" stroke-width="2"/></svg></div>
+      </div>
+      <div class="kpi">
+        <div class="top"><span class="ico" style="background:#dbeafe;color:#2563eb"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3 3-5 6-5s6 2 6 5"/></svg></span>Активные юзеры</div>
+        <div class="val"><span data-count="12480">0</span></div>
+        <div class="meta"><span class="delta up">↑ 4.8%</span><span class="vs">DAU 3 412</span></div>
+        <div class="spark"><svg viewBox="0 0 60 24" preserveAspectRatio="none"><polyline class="s-blue" points="0,15 10,14 20,16 30,12 40,13 50,9 60,10" fill="none" stroke-width="2"/></svg></div>
+      </div>
+      <div class="kpi">
+        <div class="top"><span class="ico" style="background:#f3e8ff;color:#7c3aed"><svg viewBox="0 0 24 24"><path d="M12 2v20M2 12h20"/></svg></span>Регистрации</div>
+        <div class="val"><span data-count="248">0</span><small>/день</small></div>
+        <div class="meta"><span class="delta up">↑ 12.4%</span><span class="vs">всего 6 240</span></div>
+        <div class="spark"><svg viewBox="0 0 60 24" preserveAspectRatio="none"><polyline class="s-violet" points="0,17 12,14 24,12 36,11 48,8 60,6" fill="none" stroke-width="2"/></svg></div>
+      </div>
+      <div class="kpi">
+        <div class="top"><span class="ico" style="background:#fef3c7;color:#d97706"><svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></span>Churn rate</div>
+        <div class="val"><span data-count="3.2" data-dec="1">0</span><small>%</small></div>
+        <div class="meta"><span class="delta down">↑ 0.4%</span><span class="vs">отток 28 юзеров</span></div>
+        <div class="spark"><svg viewBox="0 0 60 24" preserveAspectRatio="none"><polyline class="s-amber" points="0,14 10,15 20,13 30,16 40,14 50,17 60,16" fill="none" stroke-width="2"/></svg></div>
+      </div>
+      <div class="kpi">
+        <div class="top"><span class="ico" style="background:#fce7f3;color:#db2777"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span>LTV / CAC</div>
+        <div class="val"><span data-count="4.2" data-dec="1">0</span><small>×</small></div>
+        <div class="meta"><span class="delta up">↑ 0.6×</span><span class="vs">здоровый > 3</span></div>
+        <div class="spark"><svg viewBox="0 0 60 24" preserveAspectRatio="none"><polyline class="s-pink" points="0,18 12,16 24,15 36,11 48,9 60,5" fill="none" stroke-width="2"/></svg></div>
+      </div>
+    </div>
+
+    <div class="grid-2 reveal" data-pages="overview">
+      <section class="card chart-card">
+        <div class="card-h">
+          <div>
+            <h3>Recurring revenue · MRR / new / expansion / churned</h3>
+            <div class="sub">Динамика за 30 дней по всем потокам</div>
+          </div>
+          <div class="tabs" id="mrrTabs">
+            <button data-mrr-mode="mrr">Только MRR</button>
+            <button class="on" data-mrr-mode="all">Все потоки</button>
+            <button data-mrr-mode="pct">% роста</button>
+          </div>
+        </div>
+        <div class="chart-legend" id="mrrLegend">
+          <span class="legend-item"><span class="legend-dot" style="background:#0d9488"></span>MRR <b>$84.3k</b></span>
+          <span class="legend-item"><span class="legend-dot" style="background:#06b6d4"></span>New <b>$12.4k</b></span>
+          <span class="legend-item"><span class="legend-dot" style="background:#8b5cf6"></span>Expansion <b>$6.2k</b></span>
+          <span class="legend-item"><span class="legend-dot" style="background:#ef4444"></span>Churned <b>$2.8k</b></span>
+        </div>
+        <div class="chart-wrap" id="mrrChartHost"></div>
+      </section>
+
+      <section class="card">
+        <div class="card-h"><div><h3>Воронка регистрации</h3><div class="sub">Конверсия от посещения до подписки</div></div></div>
+        <div class="funnel">
+          <div class="funnel-row"><div class="label"><b>Посетители</b><small>уникальные за период</small></div><div class="funnel-bar"><i data-w="100"></i><span>24 820</span></div><div class="conv">100%</div></div>
+          <div class="funnel-row"><div class="label"><b>Просмотр /pricing</b><small>заглянули в тарифы</small></div><div class="funnel-bar"><i data-w="42"></i><span>10 418</span></div><div class="conv">42.0%</div></div>
+          <div class="funnel-row"><div class="label"><b>Начало регистрации</b><small>открыли форму</small></div><div class="funnel-bar"><i data-w="18"></i><span>4 466</span></div><div class="conv">18.0%</div></div>
+          <div class="funnel-row"><div class="label"><b>Завершили signup</b><small>создали аккаунт</small></div><div class="funnel-bar"><i data-w="11"></i><span>2 730</span></div><div class="conv">11.0%</div></div>
+          <div class="funnel-row"><div class="label"><b>Активация (5+ действий)</b><small>стали активным юзером</small></div><div class="funnel-bar"><i data-w="6.4"></i><span>1 588</span></div><div class="conv">6.4%</div></div>
+          <div class="funnel-row"><div class="label"><b>Платная подписка</b><small>пробили платёж</small></div><div class="funnel-bar"><i data-w="1.8"></i><span>447</span></div><div class="conv">1.8%</div></div>
+        </div>
+      </section>
+    </div>
+
+    <div class="grid-3 reveal" data-pages="overview">
+      <section class="card">
+        <div class="card-h"><div><h3>Когортная аналитика</h3><div class="sub">Retention по месяцам регистрации</div></div></div>
+        <div class="cohort">
+          <table>
+            <thead><tr><th class="first">Когорта</th><th>Юзеров</th><th>Нед. 1</th><th>Нед. 2</th><th>Нед. 3</th><th>Нед. 4</th><th>Нед. 8</th><th>Нед. 12</th></tr></thead>
+            <tbody>
+              <tr><td class="first">Март 2026</td><td class="users">1 240</td><td class="h5">100%</td><td class="h4">68%</td><td class="h3">52%</td><td class="h3">44%</td><td class="h2">35%</td><td class="h2">31%</td></tr>
+              <tr><td class="first">Апрель 2026</td><td class="users">1 580</td><td class="h5">100%</td><td class="h4">71%</td><td class="h4">58%</td><td class="h3">48%</td><td class="h3">40%</td><td class="h2">—</td></tr>
+              <tr><td class="first">Май 2026</td><td class="users">2 120</td><td class="h5">100%</td><td class="h5">74%</td><td class="h4">61%</td><td class="h4">53%</td><td class="h0">—</td><td class="h0">—</td></tr>
+              <tr><td class="first">Июнь 2026</td><td class="users">2 730</td><td class="h5">100%</td><td class="h5">76%</td><td class="h4">64%</td><td class="h0">—</td><td class="h0">—</td><td class="h0">—</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card geo-card">
+        <div class="card-h" style="padding-bottom:10px"><div><h3>География юзеров</h3><div class="sub">Топ-5 регионов · 30Д</div></div></div>
+        <div class="geo-row">
+          <div class="donut-wrap">
+            <svg viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="40" fill="none" stroke="#e3e9ee" stroke-width="14"/>
+              <circle cx="50" cy="50" r="40" fill="none" stroke="#0d9488" stroke-width="14" stroke-dasharray="92 251" stroke-linecap="butt"/>
+              <circle cx="50" cy="50" r="40" fill="none" stroke="#06b6d4" stroke-width="14" stroke-dasharray="56 251" stroke-dashoffset="-92" stroke-linecap="butt"/>
+              <circle cx="50" cy="50" r="40" fill="none" stroke="#8b5cf6" stroke-width="14" stroke-dasharray="38 251" stroke-dashoffset="-148" stroke-linecap="butt"/>
+              <circle cx="50" cy="50" r="40" fill="none" stroke="#f59e0b" stroke-width="14" stroke-dasharray="28 251" stroke-dashoffset="-186" stroke-linecap="butt"/>
+              <circle cx="50" cy="50" r="40" fill="none" stroke="#ec4899" stroke-width="14" stroke-dasharray="18 251" stroke-dashoffset="-214" stroke-linecap="butt"/>
+            </svg>
+            <div class="center"><div><div class="lbl">Всего</div><div class="num"><span data-count="12480">0</span></div></div></div>
+          </div>
+          <div class="geo-list">
+            <div class="geo-item"><span class="dot" style="background:#0d9488"></span><b>🇷🇺 Россия</b><span class="num">4 580</span><span class="pct">36.7%</span></div>
+            <div class="geo-item"><span class="dot" style="background:#06b6d4"></span><b>🇰🇿 Казахстан</b><span class="num">2 780</span><span class="pct">22.3%</span></div>
+            <div class="geo-item"><span class="dot" style="background:#8b5cf6"></span><b>🇧🇾 Беларусь</b><span class="num">1 890</span><span class="pct">15.1%</span></div>
+            <div class="geo-item"><span class="dot" style="background:#f59e0b"></span><b>🇺🇿 Узбекистан</b><span class="num">1 390</span><span class="pct">11.1%</span></div>
+            <div class="geo-item"><span class="dot" style="background:#ec4899"></span><b>🇦🇲 Армения</b><span class="num">890</span><span class="pct">7.1%</span></div>
+            <div class="geo-item"><span class="dot" style="background:#cdd6dd"></span><b>Другие</b><span class="num">950</span><span class="pct">7.6%</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-h"><div><h3>Live activity</h3><div class="sub">События за последние 5 минут</div></div></div>
+        <div class="feed">
+          <div class="feed-item"><div class="feed-ico" style="background:linear-gradient(135deg,#10b981,#059669)">+</div><div class="feed-text"><b>Новая платная подписка</b> от <b>Алексея К.</b> — план Pro $49<div class="meta">2 минуты назад<span class="tag up">+$49 MRR</span></div></div></div>
+          <div class="feed-item"><div class="feed-ico" style="background:linear-gradient(135deg,#06b6d4,#0891b2)">↑</div><div class="feed-text"><b>Upgrade Team → Business</b> от <b>Иван П.</b><div class="meta">7 минут назад<span class="tag">+$120 expansion</span></div></div></div>
+          <div class="feed-item"><div class="feed-ico" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed)">●</div><div class="feed-text"><b>Новая регистрация</b> · <b>maria.t@gmail.com</b><div class="meta">9 минут назад · из Беларуси</div></div></div>
+          <div class="feed-item"><div class="feed-ico" style="background:linear-gradient(135deg,#ef4444,#dc2626)">−</div><div class="feed-text"><b>Отмена подписки</b> от <b>Дмитрий В.</b> · план Team<div class="meta">14 минут назад<span class="tag churn">−$29 churn</span></div></div></div>
+          <div class="feed-item"><div class="feed-ico" style="background:linear-gradient(135deg,#10b981,#059669)">+</div><div class="feed-text"><b>Новая платная подписка</b> от <b>Айдар Б.</b> — план Team $29<div class="meta">18 минут назад<span class="tag up">+$29 MRR</span></div></div></div>
+          <div class="feed-item"><div class="feed-ico" style="background:linear-gradient(135deg,#06b6d4,#0891b2)">●</div><div class="feed-text"><b>3 новых регистрации</b> подряд<div class="meta">22 минуты назад · UTM: telegram-ads</div></div></div>
+        </div>
+      </section>
+    </div>
+
+    <div class="reveal" data-pages="overview">
+      <section class="card">
+        <div class="card-h">
+          <div><h3>Топ каналов привлечения</h3><div class="sub">Источник → регистрации → платные · 30Д</div></div>
+          <div class="tabs"><button class="on">Регистрации</button><button>Платные</button><button>LTV</button></div>
+        </div>
+        <table class="ch-tbl">
+          <tr><td><span class="ico"><img src="icons/telegram.svg" alt="Telegram"></span><b>Telegram Ads</b><small>таргет-каналы в RU/CIS</small></td><td class="r">82 410</td><td class="r">1 240 рег.</td><td class="r">218 платных</td><td class="r"><span class="delta up">↑ 14%</span></td></tr>
+          <tr><td><span class="ico"><img src="icons/googleads.svg" alt="Google Ads"></span><b>Google Ads</b><small>search + display</small></td><td class="r">48 220</td><td class="r">680 рег.</td><td class="r">94 платных</td><td class="r"><span class="delta up">↑ 8%</span></td></tr>
+          <tr><td><span class="ico"><img src="icons/organic.svg" alt="Organic"></span><b>Organic</b><small>SEO + соцсети</small></td><td class="r">38 410</td><td class="r">420 рег.</td><td class="r">68 платных</td><td class="r"><span class="delta up">↑ 22%</span></td></tr>
+          <tr><td><span class="ico"><img src="icons/referral.svg" alt="Referral"></span><b>Referral</b><small>программа рекомендаций</small></td><td class="r">12 480</td><td class="r">240 рег.</td><td class="r">52 платных</td><td class="r"><span class="delta up">↑ 31%</span></td></tr>
+          <tr><td><span class="ico"><img src="icons/producthunt.svg" alt="Product Hunt"></span><b>Product Hunt</b><small>launch 12.06.2026</small></td><td class="r">8 920</td><td class="r">150 рег.</td><td class="r">15 платных</td><td class="r"><span class="delta down">↓ 6%</span></td></tr>
+        </table>
+      </section>
+    </div>
+
+    <!-- ============ ACQUISITION ============ -->
+    <div class="kpis k4 reveal" data-pages="acquisition">
+      <div class="kpi"><div class="top"><span class="ico"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3 3-5 6-5s6 2 6 5"/></svg></span>Новых лидов</div><div class="val"><span data-count="7440">0</span></div><div class="meta"><span class="delta up">↑ 14.2%</span><span class="vs">248/день</span></div></div>
+      <div class="kpi"><div class="top"><span class="ico" style="background:#dbeafe;color:#2563eb"><svg viewBox="0 0 24 24"><path d="M12 2v20M2 12h20"/></svg></span>CAC blended</div><div class="val">$<span data-count="18.4" data-dec="1">0</span></div><div class="meta"><span class="delta up">↓ $2.10</span><span class="vs">было $20.50</span></div></div>
+      <div class="kpi"><div class="top"><span class="ico" style="background:#f3e8ff;color:#7c3aed"><svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/></svg></span>Конверсия в paid</div><div class="val"><span data-count="6.0" data-dec="1">0</span><small>%</small></div><div class="meta"><span class="delta up">↑ 0.8%</span><span class="vs">от лида</span></div></div>
+      <div class="kpi"><div class="top"><span class="ico" style="background:#fef3c7;color:#d97706"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span>Payback period</div><div class="val"><span data-count="3.4" data-dec="1">0</span><small>мес</small></div><div class="meta"><span class="delta up">↓ 0.6 мес</span><span class="vs">здоровый < 6</span></div></div>
+    </div>
+
+    <div class="reveal" data-pages="acquisition">
+      <section class="card">
+        <div class="card-h">
+          <div><h3>UTM-разбивка по источникам</h3><div class="sub">utm_source / utm_campaign · 30Д</div></div>
+          <div class="tabs"><button class="on">Все</button><button>Платные</button><button>Органика</button></div>
+        </div>
+        <table class="tbl">
+          <thead><tr><th>Source</th><th>Campaign</th><th class="r">Клики</th><th class="r">Рег.</th><th class="r">CR</th><th class="r">Платных</th><th class="r">CAC</th><th class="r">ROAS</th></tr></thead>
+          <tbody>
+            <tr><td class="b">telegram-ads</td><td>q2-promo-pro</td><td class="r">28 420</td><td class="r">512</td><td class="r">1.80%</td><td class="r">88</td><td class="r">$14.20</td><td class="r"><span class="pill g">3.8×</span></td></tr>
+            <tr><td class="b">telegram-ads</td><td>retarget-pricing</td><td class="r">14 110</td><td class="r">312</td><td class="r">2.21%</td><td class="r">62</td><td class="r">$9.80</td><td class="r"><span class="pill g">5.1×</span></td></tr>
+            <tr><td class="b">google-ads</td><td>search-saas-analytics</td><td class="r">24 540</td><td class="r">348</td><td class="r">1.42%</td><td class="r">52</td><td class="r">$22.40</td><td class="r"><span class="pill g">2.4×</span></td></tr>
+            <tr><td class="b">google-ads</td><td>display-retarget</td><td class="r">12 820</td><td class="r">142</td><td class="r">1.11%</td><td class="r">18</td><td class="r">$31.20</td><td class="r"><span class="pill a">1.7×</span></td></tr>
+            <tr><td class="b">organic</td><td>seo-blog</td><td class="r">18 240</td><td class="r">218</td><td class="r">1.20%</td><td class="r">36</td><td class="r">$0</td><td class="r"><span class="pill g">∞</span></td></tr>
+            <tr><td class="b">organic</td><td>twitter-content</td><td class="r">12 480</td><td class="r">128</td><td class="r">1.03%</td><td class="r">22</td><td class="r">$0</td><td class="r"><span class="pill g">∞</span></td></tr>
+            <tr><td class="b">referral</td><td>invite-program</td><td class="r">8 240</td><td class="r">182</td><td class="r">2.21%</td><td class="r">42</td><td class="r">$4.20</td><td class="r"><span class="pill g">8.2×</span></td></tr>
+            <tr><td class="b">producthunt</td><td>launch-jun-12</td><td class="r">8 920</td><td class="r">150</td><td class="r">1.68%</td><td class="r">15</td><td class="r">$0</td><td class="r"><span class="pill g">∞</span></td></tr>
+            <tr><td class="b">linkedin-ads</td><td>b2b-decision-makers</td><td class="r">4 820</td><td class="r">62</td><td class="r">1.29%</td><td class="r">14</td><td class="r">$38.40</td><td class="r"><span class="pill a">1.4×</span></td></tr>
+            <tr><td class="b">facebook-ads</td><td>q2-broad</td><td class="r">6 240</td><td class="r">48</td><td class="r">0.77%</td><td class="r">5</td><td class="r">$58.20</td><td class="r"><span class="pill r">0.6×</span></td></tr>
+          </tbody>
+        </table>
+      </section>
+    </div>
+
+    <div class="cac-grid reveal" data-pages="acquisition">
+      <div class="cac-card"><div class="ch"><b>Telegram Ads</b> · CAC</div><div class="v">$11.80</div><span class="delta up">↓ $3.20</span><div class="spk"><svg viewBox="0 0 100 34" preserveAspectRatio="none"><polyline class="s-teal" points="0,8 10,10 20,12 30,14 40,18 50,20 60,22 70,24 80,26 90,28 100,30" fill="none" stroke-width="2"/></svg></div></div>
+      <div class="cac-card"><div class="ch"><b>Google Ads</b> · CAC</div><div class="v">$26.40</div><span class="delta down">↑ $1.10</span><div class="spk"><svg viewBox="0 0 100 34" preserveAspectRatio="none"><polyline class="s-amber" points="0,18 10,17 20,18 30,16 40,15 50,17 60,16 70,14 80,15 90,13 100,12" fill="none" stroke-width="2"/></svg></div></div>
+      <div class="cac-card"><div class="ch"><b>Referral</b> · CAC</div><div class="v">$4.20</div><span class="delta up">↓ $1.80</span><div class="spk"><svg viewBox="0 0 100 34" preserveAspectRatio="none"><polyline class="s-violet" points="0,6 10,8 20,10 30,12 40,14 50,16 60,18 70,20 80,22 90,24 100,26" fill="none" stroke-width="2"/></svg></div></div>
+    </div>
+
+    <div class="grid-2eq reveal" data-pages="acquisition">
+      <section class="card">
+        <div class="card-h"><div><h3>Тренд новых лидов</h3><div class="sub">Лидов / день за 30Д</div></div></div>
+        <div class="chart-wrap">
+          <svg viewBox="0 0 600 240" preserveAspectRatio="none">
+            <defs><linearGradient id="gA" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#8b5cf6" stop-opacity=".25"/><stop offset="100%" stop-color="#8b5cf6" stop-opacity="0"/></linearGradient></defs>
+            <line x1="0" y1="50" x2="600" y2="50" stroke="#eef1f4"/><line x1="0" y1="110" x2="600" y2="110" stroke="#eef1f4"/><line x1="0" y1="170" x2="600" y2="170" stroke="#eef1f4"/>
+            <path d="M0,180 L30,170 L60,165 L90,160 L120,168 L150,150 L180,145 L210,140 L240,148 L270,135 L300,125 L330,115 L360,120 L390,108 L420,100 L450,95 L480,88 L510,80 L540,75 L570,65 L600,55 L600,240 L0,240 Z" fill="url(#gA)"/>
+            <polyline points="0,180 30,170 60,165 90,160 120,168 150,150 180,145 210,140 240,148 270,135 300,125 330,115 360,120 390,108 420,100 450,95 480,88 510,80 540,75 570,65 600,55" fill="none" stroke="#8b5cf6" stroke-width="2.5" stroke-linejoin="round"/>
+            <circle cx="600" cy="55" r="5" fill="#fff" stroke="#8b5cf6" stroke-width="2.5"/>
+          </svg>
+          <div class="chart-x"><span>1 мая</span><span>8 мая</span><span>15 мая</span><span>22 мая</span><span>29 мая</span><span>5 июн</span><span>12 июн</span><span>18 июн</span></div>
+        </div>
+      </section>
+      <section class="card">
+        <div class="card-h"><div><h3>Разбивка лидов по устройствам</h3><div class="sub">Где регистрируются</div></div></div>
+        <div class="bar-list">
+          <div class="bar-row"><div class="name"><span class="dot" style="background:#0d9488"></span>Desktop</div><div class="track"><i data-w="58"></i></div><div class="v">58%</div></div>
+          <div class="bar-row"><div class="name"><span class="dot" style="background:#06b6d4"></span>Mobile iOS</div><div class="track"><i class="blue" data-w="22"></i></div><div class="v">22%</div></div>
+          <div class="bar-row"><div class="name"><span class="dot" style="background:#8b5cf6"></span>Mobile Android</div><div class="track"><i class="violet" data-w="14"></i></div><div class="v">14%</div></div>
+          <div class="bar-row"><div class="name"><span class="dot" style="background:#f59e0b"></span>Tablet</div><div class="track"><i class="amber" data-w="6"></i></div><div class="v">6%</div></div>
+        </div>
+        <div class="card-h" style="padding-top:0"><div><h3 style="font-size:13.5px">Браузеры</h3></div></div>
+        <div class="bar-list">
+          <div class="bar-row"><div class="name"><span class="dot" style="background:#0d9488"></span>Chrome</div><div class="track"><i data-w="64"></i></div><div class="v">64%</div></div>
+          <div class="bar-row"><div class="name"><span class="dot" style="background:#06b6d4"></span>Safari</div><div class="track"><i class="blue" data-w="18"></i></div><div class="v">18%</div></div>
+          <div class="bar-row"><div class="name"><span class="dot" style="background:#8b5cf6"></span>Firefox</div><div class="track"><i class="violet" data-w="9"></i></div><div class="v">9%</div></div>
+          <div class="bar-row"><div class="name"><span class="dot" style="background:#f59e0b"></span>Edge / Opera</div><div class="track"><i class="amber" data-w="9"></i></div><div class="v">9%</div></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ============ RETENTION ============ -->
+    <div class="kpis k4 reveal" data-pages="retention">
+      <div class="kpi"><div class="top"><span class="ico"><svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/></svg></span>Месячный retention</div><div class="val"><span data-count="78.4" data-dec="1">0</span><small>%</small></div><div class="meta"><span class="delta up">↑ 2.1%</span><span class="vs">M1 retention</span></div></div>
+      <div class="kpi"><div class="top"><span class="ico" style="background:#fee2e2;color:#dc2626"><svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg></span>Gross churn</div><div class="val"><span data-count="3.2" data-dec="1">0</span><small>%</small></div><div class="meta"><span class="delta down">↑ 0.4%</span><span class="vs">28 юзеров</span></div></div>
+      <div class="kpi"><div class="top"><span class="ico" style="background:#dcfce7;color:#10b981"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span>Net revenue retention</div><div class="val"><span data-count="112" data-dec="0">0</span><small>%</small></div><div class="meta"><span class="delta up">↑ 4%</span><span class="vs">> 100% — growth</span></div></div>
+      <div class="kpi"><div class="top"><span class="ico" style="background:#fce7f3;color:#db2777"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg></span>Avg LTV</div><div class="val">$<span data-count="412">0</span></div><div class="meta"><span class="delta up">↑ $38</span><span class="vs">по платным</span></div></div>
+    </div>
+
+    <div class="grid-2eq reveal" data-pages="retention">
+      <section class="card">
+        <div class="card-h"><div><h3>Причины отписок</h3><div class="sub">Опрос exit-формы · 28 отписок за 30Д</div></div></div>
+        <div class="bar-list">
+          <div class="bar-row"><div class="name"><span class="dot" style="background:#ef4444"></span>Дорого / нет бюджета</div><div class="track"><i class="red" data-w="34"></i></div><div class="v">34%</div></div>
+          <div class="bar-row"><div class="name"><span class="dot" style="background:#f59e0b"></span>Не хватает фичи X</div><div class="track"><i class="amber" data-w="22"></i></div><div class="v">22%</div></div>
+          <div class="bar-row"><div class="name"><span class="dot" style="background:#8b5cf6"></span>Перешли на конкурента</div><div class="track"><i class="violet" data-w="18"></i></div><div class="v">18%</div></div>
+          <div class="bar-row"><div class="name"><span class="dot" style="background:#3b82f6"></span>Команда распалась</div><div class="track"><i class="blue" data-w="11"></i></div><div class="v">11%</div></div>
+          <div class="bar-row"><div class="name"><span class="dot" style="background:#0d9488"></span>Слишком сложно</div><div class="track"><i data-w="9"></i></div><div class="v">9%</div></div>
+          <div class="bar-row"><div class="name"><span class="dot" style="background:#cdd6dd"></span>Другое / без ответа</div><div class="track"><i style="background:linear-gradient(90deg,#9aa7b3,#5e6e7d)" data-w="6"></i></div><div class="v">6%</div></div>
+        </div>
+      </section>
+      <section class="card">
+        <div class="card-h"><div><h3>NPS · последние 30 дней</h3><div class="sub">412 ответов · ответили 18% активных</div></div></div>
+        <div class="nps-wrap">
+          <div class="nps-gauge">
+            <svg viewBox="0 0 170 110">
+              <path d="M15,95 A70,70 0 0 1 155,95" fill="none" stroke="#fee2e2" stroke-width="12" stroke-linecap="round"/>
+              <path d="M15,95 A70,70 0 0 1 155,95" fill="none" stroke="#10b981" stroke-width="12" stroke-linecap="round" stroke-dasharray="135 220" stroke-dashoffset="-12"/>
+              <text x="85" y="80" text-anchor="middle" font-size="32" font-weight="700" fill="#0b1822" font-family="Inter,sans-serif" letter-spacing="-1">+42</text>
+              <text x="85" y="98" text-anchor="middle" font-size="10" fill="#5e6e7d" font-family="Inter,sans-serif" letter-spacing="1.5">NPS</text>
+            </svg>
+          </div>
+          <div class="nps-side">
+            <div class="nps-row"><b>Promoters (9–10)</b><div class="bar"><i style="background:#10b981" data-w="58"></i></div><span class="n">58%</span></div>
+            <div class="nps-row"><b>Passives (7–8)</b><div class="bar"><i style="background:#f59e0b" data-w="26"></i></div><span class="n">26%</span></div>
+            <div class="nps-row"><b>Detractors (0–6)</b><div class="bar"><i style="background:#ef4444" data-w="16"></i></div><span class="n">16%</span></div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="grid-2 reveal" data-pages="retention">
+      <section class="card">
+        <div class="card-h"><div><h3>Retention curve · weekly</h3><div class="sub">Средняя выживаемость когорт по неделям</div></div></div>
+        <div class="ret-curve" id="retCurveHost"></div>
+        <div class="chart-legend" style="padding:0 20px 16px">
+          <span class="legend-item"><span class="legend-dot" style="background:#0d9488"></span>Все юзеры</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#3b82f6"></span>Только платные <b>+12% vs all</b></span>
+        </div>
+      </section>
+      <section class="card">
+        <div class="card-h">
+          <div><h3>Win-back · кандидаты на возврат</h3><div class="sub">Отписались < 14 дней назад · приоритет: бывший LTV</div></div>
+          <div class="tabs"><button class="on">Топ</button><button>Все 28</button></div>
+        </div>
+        <div class="wb-list">
+          <div class="wb-item"><div class="ava">ДВ</div><div class="info"><b>Дмитрий В.</b><small>Team · отписался 4 дня назад · «дорого»</small></div><div class="amt">−$348 LTV</div><button class="btn-mini">Скидка 30%</button></div>
+          <div class="wb-item"><div class="ava">ЕС</div><div class="info"><b>Елена С.</b><small>Pro · отписалась 6 дней назад · «нет фичи X»</small></div><div class="amt">−$294 LTV</div><button class="btn-mini">Списаться</button></div>
+          <div class="wb-item"><div class="ava">АП</div><div class="info"><b>Артём П.</b><small>Business · отписался 9 дней назад · «команда»</small></div><div class="amt">−$720 LTV</div><button class="btn-mini">Pause 3 мес</button></div>
+          <div class="wb-item"><div class="ava">МК</div><div class="info"><b>Максим К.</b><small>Team · отписался 12 дней назад · «конкурент»</small></div><div class="amt">−$232 LTV</div><button class="btn-mini">Демо v2</button></div>
+          <div class="wb-item"><div class="ava">ИР</div><div class="info"><b>Ирина Р.</b><small>Pro · отписалась 13 дней назад · «сложно»</small></div><div class="amt">−$196 LTV</div><button class="btn-mini">Онбординг</button></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ============ FUNNELS ============ -->
+    <div class="kpis k4 reveal" data-pages="funnels">
+      <div class="kpi"><div class="top"><span class="ico"><svg viewBox="0 0 24 24"><path d="M3 3h18v4H3zM6 7v14h12V7"/></svg></span>Visitor → Paid</div><div class="val"><span data-count="1.80" data-dec="2">0</span><small>%</small></div><div class="meta"><span class="delta up">↑ 0.21%</span><span class="vs">end-to-end</span></div></div>
+      <div class="kpi"><div class="top"><span class="ico" style="background:#dbeafe;color:#2563eb"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg></span>Signup CR</div><div class="val"><span data-count="11.0" data-dec="1">0</span><small>%</small></div><div class="meta"><span class="delta up">↑ 1.4%</span><span class="vs">от посетителей</span></div></div>
+      <div class="kpi"><div class="top"><span class="ico" style="background:#f3e8ff;color:#7c3aed"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/></svg></span>Activation</div><div class="val"><span data-count="58.2" data-dec="1">0</span><small>%</small></div><div class="meta"><span class="delta up">↑ 3.8%</span><span class="vs">от signup</span></div></div>
+      <div class="kpi"><div class="top"><span class="ico" style="background:#fef3c7;color:#d97706"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>Trial → Paid</div><div class="val"><span data-count="28.4" data-dec="1">0</span><small>%</small></div><div class="meta"><span class="delta up">↑ 2.2%</span><span class="vs">после 14д триала</span></div></div>
+    </div>
+
+    <div class="multi-funnel reveal" data-pages="funnels">
+      <section class="card">
+        <div class="card-h"><div><h3>Воронка 1 · Регистрация</h3><div class="sub">visitor → signup</div></div></div>
+        <div class="funnel">
+          <div class="funnel-row"><div class="label"><b>Посетители</b><small>уникальные</small></div><div class="funnel-bar"><i data-w="100"></i><span>24 820</span></div><div class="conv">100%</div></div>
+          <div class="funnel-row"><div class="label"><b>Лендинг → /signup</b><small>клик на CTA</small></div><div class="funnel-bar"><i data-w="32"></i><span>7 942</span></div><div class="conv">32.0%</div></div>
+          <div class="funnel-row"><div class="label"><b>Открыли форму</b><small>увидели поля</small></div><div class="funnel-bar"><i data-w="22"></i><span>5 460</span></div><div class="conv">22.0%</div></div>
+          <div class="funnel-row"><div class="label"><b>Заполнили email</b><small>+ 1 поле</small></div><div class="funnel-bar"><i data-w="15"></i><span>3 724</span></div><div class="conv">15.0%</div></div>
+          <div class="funnel-row"><div class="label"><b>Подтвердили email</b><small>кликнули в письме</small></div><div class="funnel-bar"><i data-w="11"></i><span>2 730</span></div><div class="conv">11.0%</div></div>
+        </div>
+      </section>
+      <section class="card">
+        <div class="card-h"><div><h3>Воронка 2 · Активация</h3><div class="sub">signup → активный юзер</div></div></div>
+        <div class="funnel">
+          <div class="funnel-row"><div class="label"><b>Создан аккаунт</b><small>после email</small></div><div class="funnel-bar blue"><i data-w="100"></i><span>2 730</span></div><div class="conv">100%</div></div>
+          <div class="funnel-row"><div class="label"><b>Подключили данные</b><small>первый источник</small></div><div class="funnel-bar blue"><i data-w="78"></i><span>2 129</span></div><div class="conv">78.0%</div></div>
+          <div class="funnel-row"><div class="label"><b>Создали дашборд</b><small>любой</small></div><div class="funnel-bar blue"><i data-w="64"></i><span>1 747</span></div><div class="conv">64.0%</div></div>
+          <div class="funnel-row"><div class="label"><b>Пригласили команду</b><small>2+ юзера</small></div><div class="funnel-bar blue"><i data-w="44"></i><span>1 201</span></div><div class="conv">44.0%</div></div>
+          <div class="funnel-row"><div class="label"><b>Активный (5+ действий)</b><small>день 7</small></div><div class="funnel-bar blue"><i data-w="58"></i><span>1 588</span></div><div class="conv">58.2%</div></div>
+        </div>
+      </section>
+      <section class="card">
+        <div class="card-h"><div><h3>Воронка 3 · Trial → Paid</h3><div class="sub">14-дневный триал</div></div></div>
+        <div class="funnel">
+          <div class="funnel-row"><div class="label"><b>Старт триала</b><small>добавили карту</small></div><div class="funnel-bar violet"><i data-w="100"></i><span>1 573</span></div><div class="conv">100%</div></div>
+          <div class="funnel-row"><div class="label"><b>Использовали 3+ раза</b><small>день 3</small></div><div class="funnel-bar violet"><i data-w="74"></i><span>1 164</span></div><div class="conv">74.0%</div></div>
+          <div class="funnel-row"><div class="label"><b>Использовали 7+ раз</b><small>день 7</small></div><div class="funnel-bar violet"><i data-w="52"></i><span>818</span></div><div class="conv">52.0%</div></div>
+          <div class="funnel-row"><div class="label"><b>Дошли до day 14</b><small>не отказались</small></div><div class="funnel-bar violet"><i data-w="38"></i><span>598</span></div><div class="conv">38.0%</div></div>
+          <div class="funnel-row"><div class="label"><b>Конвертировались в paid</b><small>первый платёж</small></div><div class="funnel-bar violet"><i data-w="28"></i><span>447</span></div><div class="conv">28.4%</div></div>
+        </div>
+      </section>
+      <section class="card">
+        <div class="card-h"><div><h3>Воронка 4 · Upgrade</h3><div class="sub">Team → Business / Enterprise</div></div></div>
+        <div class="funnel">
+          <div class="funnel-row"><div class="label"><b>Team-подписки</b><small>активные</small></div><div class="funnel-bar amber"><i data-w="100"></i><span>1 840</span></div><div class="conv">100%</div></div>
+          <div class="funnel-row"><div class="label"><b>Достигли лимита</b><small>места / события</small></div><div class="funnel-bar amber"><i data-w="42"></i><span>773</span></div><div class="conv">42.0%</div></div>
+          <div class="funnel-row"><div class="label"><b>Зашли в /upgrade</b><small>в личке</small></div><div class="funnel-bar amber"><i data-w="22"></i><span>405</span></div><div class="conv">22.0%</div></div>
+          <div class="funnel-row"><div class="label"><b>Запросили демо</b><small>Business+</small></div><div class="funnel-bar amber"><i data-w="11"></i><span>202</span></div><div class="conv">11.0%</div></div>
+          <div class="funnel-row"><div class="label"><b>Закрылись в upgrade</b><small>↑ ARPU $120</small></div><div class="funnel-bar amber"><i data-w="6"></i><span>110</span></div><div class="conv">6.0%</div></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ============ COHORTS ============ -->
+    <div class="cohort-stats reveal" data-pages="cohorts">
+      <div class="cohort-stat"><div class="l">Лучшая когорта</div><div class="v">Июнь '26</div><div class="d up">↑ 76% retention W1</div></div>
+      <div class="cohort-stat"><div class="l">Средний M1</div><div class="v">53%</div><div class="d up">↑ 4% vs прошлый кв.</div></div>
+      <div class="cohort-stat"><div class="l">Power-users (>30д)</div><div class="v">1 412</div><div class="d up">↑ 18%</div></div>
+      <div class="cohort-stat"><div class="l">Когорты под мониторингом</div><div class="v">12</div><div class="d">с янв 2026</div></div>
+    </div>
+
+    <div class="reveal" data-pages="cohorts">
+      <section class="card">
+        <div class="card-h">
+          <div><h3>Retention по неделям регистрации</h3><div class="sub">Все когорты с января 2026 · % выживших</div></div>
+          <div class="tabs"><button class="on">% выжило</button><button>Абсолют</button><button>Revenue</button></div>
+        </div>
+        <div class="cohort">
+          <table>
+            <thead><tr><th class="first">Когорта</th><th>Юзеров</th><th>W1</th><th>W2</th><th>W3</th><th>W4</th><th>W6</th><th>W8</th><th>W10</th><th>W12</th><th>W16</th><th>W20</th></tr></thead>
+            <tbody>
+              <tr><td class="first">Январь 2026</td><td class="users">820</td><td class="h5">100%</td><td class="h4">62%</td><td class="h3">48%</td><td class="h3">40%</td><td class="h2">34%</td><td class="h2">30%</td><td class="h2">28%</td><td class="h1">26%</td><td class="h1">24%</td><td class="h1">22%</td></tr>
+              <tr><td class="first">Февраль 2026</td><td class="users">1 040</td><td class="h5">100%</td><td class="h4">65%</td><td class="h3">50%</td><td class="h3">42%</td><td class="h2">35%</td><td class="h2">31%</td><td class="h2">28%</td><td class="h2">26%</td><td class="h1">24%</td><td class="h1">22%</td></tr>
+              <tr><td class="first">Март 2026</td><td class="users">1 240</td><td class="h5">100%</td><td class="h4">68%</td><td class="h3">52%</td><td class="h3">44%</td><td class="h2">38%</td><td class="h2">35%</td><td class="h2">33%</td><td class="h2">31%</td><td class="h1">28%</td><td class="h0">—</td></tr>
+              <tr><td class="first">Апрель 2026</td><td class="users">1 580</td><td class="h5">100%</td><td class="h4">71%</td><td class="h4">58%</td><td class="h3">48%</td><td class="h3">42%</td><td class="h2">40%</td><td class="h2">37%</td><td class="h0">—</td><td class="h0">—</td><td class="h0">—</td></tr>
+              <tr><td class="first">Май 2026</td><td class="users">2 120</td><td class="h5">100%</td><td class="h5">74%</td><td class="h4">61%</td><td class="h4">53%</td><td class="h3">46%</td><td class="h0">—</td><td class="h0">—</td><td class="h0">—</td><td class="h0">—</td><td class="h0">—</td></tr>
+              <tr><td class="first">Июнь 2026</td><td class="users">2 730</td><td class="h5">100%</td><td class="h5">76%</td><td class="h4">64%</td><td class="h0">—</td><td class="h0">—</td><td class="h0">—</td><td class="h0">—</td><td class="h0">—</td><td class="h0">—</td><td class="h0">—</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <div class="grid-2 reveal" data-pages="cohorts">
+      <section class="card">
+        <div class="card-h"><div><h3>Retention curves · сравнение</h3><div class="sub">3 последних когорты overlay</div></div></div>
+        <div class="ret-curve" id="cohortCurveHost"></div>
+        <div class="chart-legend" style="padding:0 20px 16px">
+          <span class="legend-item"><span class="legend-dot" style="background:#0d9488"></span>Апрель '26</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#3b82f6"></span>Май '26</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#8b5cf6"></span>Июнь '26</span>
+        </div>
+      </section>
+      <section class="card">
+        <div class="card-h"><div><h3>Power-users по тарифам</h3><div class="sub">Юзеры с 30+ днями активности</div></div></div>
+        <div class="bar-list">
+          <div class="bar-row"><div class="name"><span class="dot" style="background:#0f766e"></span>Enterprise</div><div class="track"><i data-w="92"></i></div><div class="v">92%</div></div>
+          <div class="bar-row"><div class="name"><span class="dot" style="background:#0d9488"></span>Business</div><div class="track"><i data-w="78"></i></div><div class="v">78%</div></div>
+          <div class="bar-row"><div class="name"><span class="dot" style="background:#14b8a6"></span>Pro</div><div class="track"><i data-w="64"></i></div><div class="v">64%</div></div>
+          <div class="bar-row"><div class="name"><span class="dot" style="background:#5eead4"></span>Team</div><div class="track"><i data-w="48"></i></div><div class="v">48%</div></div>
+          <div class="bar-row"><div class="name"><span class="dot" style="background:#ccfbf1"></span>Free</div><div class="track"><i data-w="22"></i></div><div class="v">22%</div></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ============ GEO ============ -->
+    <div class="kpis k4 reveal" data-pages="geo">
+      <div class="kpi"><div class="top"><span class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg></span>Стран</div><div class="val"><span data-count="32">0</span></div><div class="meta"><span class="delta up">↑ 4</span><span class="vs">за 30Д</span></div></div>
+      <div class="kpi"><div class="top"><span class="ico" style="background:#dbeafe;color:#2563eb"><svg viewBox="0 0 24 24"><path d="M3 12h18"/></svg></span>Топ-регион MRR</div><div class="val">$<span data-count="31420">0</span></div><div class="meta"><span class="delta up">↑ 18%</span><span class="vs">🇷🇺 Россия</span></div></div>
+      <div class="kpi"><div class="top"><span class="ico" style="background:#f3e8ff;color:#7c3aed"><svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/></svg></span>Растущий регион</div><div class="val">🇰🇿 <span data-count="42">0</span><small>%</small></div><div class="meta"><span class="delta up">↑ 42%</span><span class="vs">Казахстан 30Д</span></div></div>
+      <div class="kpi"><div class="top"><span class="ico" style="background:#fef3c7;color:#d97706"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/></svg></span>Главный город</div><div class="val">МСК</div><div class="meta"><span class="delta">2 140 юзеров</span><span class="vs">17.2% от RU</span></div></div>
+    </div>
+
+    <div class="reveal" data-pages="geo">
+      <section class="card">
+        <div class="card-h">
+          <div><h3>Топ-стран по юзерам</h3><div class="sub">Доля от 12 480 активных за 30Д</div></div>
+          <div class="tabs"><button class="on">Юзеры</button><button>MRR</button><button>Рост</button></div>
+        </div>
+        <div class="country-cards">
+          <div class="cc"><div class="flag">🇷🇺</div><div class="nm">Россия<small>Москва · СПб · Новосиб</small></div><div class="vv">4 580<small>юзеров</small></div><span class="gr">↑ 18%</span><div class="bar"><i data-w="100"></i></div></div>
+          <div class="cc"><div class="flag">🇰🇿</div><div class="nm">Казахстан<small>Алматы · Астана</small></div><div class="vv">2 780<small>юзеров</small></div><span class="gr">↑ 42%</span><div class="bar"><i data-w="61"></i></div></div>
+          <div class="cc"><div class="flag">🇧🇾</div><div class="nm">Беларусь<small>Минск · Гомель</small></div><div class="vv">1 890<small>юзеров</small></div><span class="gr">↑ 24%</span><div class="bar"><i data-w="41"></i></div></div>
+          <div class="cc"><div class="flag">🇺🇿</div><div class="nm">Узбекистан<small>Ташкент · Самарканд</small></div><div class="vv">1 390<small>юзеров</small></div><span class="gr">↑ 36%</span><div class="bar"><i data-w="30"></i></div></div>
+          <div class="cc"><div class="flag">🇦🇲</div><div class="nm">Армения<small>Ереван</small></div><div class="vv">890<small>юзеров</small></div><span class="gr">↑ 28%</span><div class="bar"><i data-w="19"></i></div></div>
+          <div class="cc"><div class="flag">🇬🇪</div><div class="nm">Грузия<small>Тбилиси · Батуми</small></div><div class="vv">420<small>юзеров</small></div><span class="gr">↑ 18%</span><div class="bar"><i data-w="9"></i></div></div>
+          <div class="cc"><div class="flag">🇩🇪</div><div class="nm">Германия<small>Берлин · Мюнхен</small></div><div class="vv">142<small>юзеров</small></div><span class="gr s">↑ 8%</span><div class="bar"><i data-w="3"></i></div></div>
+          <div class="cc"><div class="flag">🇮🇱</div><div class="nm">Израиль<small>Тель-Авив</small></div><div class="vv">98<small>юзеров</small></div><span class="gr s">↑ 12%</span><div class="bar"><i data-w="2"></i></div></div>
+        </div>
+      </section>
+    </div>
+
+    <div class="reveal" data-pages="geo">
+      <section class="card">
+        <div class="card-h">
+          <div><h3>Юзеры и MRR по странам</h3><div class="sub">Топ-12 регионов · 30Д</div></div>
+          <div class="tabs"><button class="on">Все</button><button>Рост</button><button>MRR</button></div>
+        </div>
+        <table class="tbl">
+          <thead><tr><th>Страна</th><th>Главный город</th><th class="r">Юзеров</th><th class="r">DAU</th><th class="r">MRR</th><th class="r">ARPU</th><th class="r">Рост 30Д</th></tr></thead>
+          <tbody>
+            <tr><td class="b">🇷🇺 Россия</td><td>Москва</td><td class="r">4 580</td><td class="r">1 248</td><td class="r">$31 420</td><td class="r">$28</td><td class="r"><span class="pill g">↑ 18%</span></td></tr>
+            <tr><td class="b">🇰🇿 Казахстан</td><td>Алматы</td><td class="r">2 780</td><td class="r">724</td><td class="r">$18 240</td><td class="r">$32</td><td class="r"><span class="pill g">↑ 42%</span></td></tr>
+            <tr><td class="b">🇧🇾 Беларусь</td><td>Минск</td><td class="r">1 890</td><td class="r">512</td><td class="r">$12 180</td><td class="r">$26</td><td class="r"><span class="pill g">↑ 24%</span></td></tr>
+            <tr><td class="b">🇺🇿 Узбекистан</td><td>Ташкент</td><td class="r">1 390</td><td class="r">348</td><td class="r">$7 820</td><td class="r">$22</td><td class="r"><span class="pill g">↑ 36%</span></td></tr>
+            <tr><td class="b">🇦🇲 Армения</td><td>Ереван</td><td class="r">890</td><td class="r">242</td><td class="r">$6 420</td><td class="r">$36</td><td class="r"><span class="pill g">↑ 28%</span></td></tr>
+            <tr><td class="b">🇬🇪 Грузия</td><td>Тбилиси</td><td class="r">420</td><td class="r">118</td><td class="r">$3 240</td><td class="r">$34</td><td class="r"><span class="pill g">↑ 18%</span></td></tr>
+            <tr><td class="b">🇰🇬 Кыргызстан</td><td>Бишкек</td><td class="r">180</td><td class="r">42</td><td class="r">$1 280</td><td class="r">$26</td><td class="r"><span class="pill g">↑ 22%</span></td></tr>
+            <tr><td class="b">🇩🇪 Германия</td><td>Берлин</td><td class="r">142</td><td class="r">38</td><td class="r">$1 980</td><td class="r">$42</td><td class="r"><span class="pill g">↑ 8%</span></td></tr>
+            <tr><td class="b">🇮🇱 Израиль</td><td>Тель-Авив</td><td class="r">98</td><td class="r">28</td><td class="r">$1 420</td><td class="r">$48</td><td class="r"><span class="pill g">↑ 12%</span></td></tr>
+            <tr><td class="b">🇨🇾 Кипр</td><td>Лимасол</td><td class="r">62</td><td class="r">18</td><td class="r">$948</td><td class="r">$44</td><td class="r"><span class="pill g">↑ 14%</span></td></tr>
+            <tr><td class="b">🇦🇪 ОАЭ</td><td>Дубай</td><td class="r">48</td><td class="r">12</td><td class="r">$720</td><td class="r">$46</td><td class="r"><span class="pill a">↑ 4%</span></td></tr>
+            <tr><td class="b">Другие (21 страна)</td><td>—</td><td class="r">22</td><td class="r">6</td><td class="r">$340</td><td class="r">$28</td><td class="r"><span class="pill a">—</span></td></tr>
+          </tbody>
+        </table>
+      </section>
+    </div>
+
+    <!-- Reports page -->
+    <div class="reveal" data-pages="reports">
+      <div class="reports-grid">
+        <div class="rep-card" data-rep="mrr"><div class="ico"><svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8M21 7v5h-5"/></svg></div><b>Еженедельный MRR</b><small>Выручка, расширения, churn по неделям</small><div class="meta">Автоотправка · понедельник<span>📧 → команда</span></div></div>
+        <div class="rep-card" data-rep="cohorts"><div class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg></div><b>Когорты по каналам</b><small>Retention в разрезе источников трафика</small><div class="meta">По запросу<span>📊 BI-дашборд</span></div></div>
+        <div class="rep-card" data-rep="churn"><div class="ico"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3 3-5 6-5s6 2 6 5"/></svg></div><b>Churn-анализ</b><small>Кто и почему отвалился за месяц</small><div class="meta">Автоотправка · 1-е число<span>📧 → CEO</span></div></div>
+        <div class="rep-card" data-rep="funnel"><div class="ico"><svg viewBox="0 0 24 24"><path d="M3 3h18v4H3zM6 7v14h12V7"/></svg></div><b>Воронка signup → paid</b><small>Конверсия на каждом шаге, drop-off</small><div class="meta">Ежедневно · 09:00<span>📧 → growth</span></div></div>
+        <div class="rep-card" data-rep="geo"><div class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/></svg></div><b>География юзеров</b><small>Распределение DAU по странам + рост</small><div class="meta">Еженедельно<span>📊 BI</span></div></div>
+        <div class="rep-card" id="newReport" data-rep="new"><div class="ico"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></div><b>+ Создать новый отчёт</b><small>На основе любого графика или метрики</small><div class="meta">Шаблон или с нуля<span style="color:var(--accent-2);font-weight:600">Начать →</span></div></div>
+      </div>
+    </div>
+
+    <!-- Experiments page -->
+    <div class="reveal" data-pages="experiments">
+      <div class="exp-card">
+        <div class="head"><div><h4>Новый онбординг с видео-туром</h4><small>Запущен 14.06.2026 · 4 дня · 2 480 юзеров</small></div><span class="pill running">● Запущен</span></div>
+        <div class="exp-bars">
+          <div class="exp-var"><div class="name">Control</div><div class="conv">11.2%</div><div class="delta" style="color:var(--mut)">base</div></div>
+          <div class="exp-var win"><div class="name">Вариант A · видео</div><div class="conv">14.8%</div><div class="delta">+32.1% к base · p=0.03</div></div>
+        </div>
+      </div>
+      <div class="exp-card">
+        <div class="head"><div><h4>Pricing: $19/29/49 vs $24/39/59</h4><small>Запущен 06.06.2026 · 12 дней · 4 120 юзеров</small></div><span class="pill won">★ Победитель</span></div>
+        <div class="exp-bars">
+          <div class="exp-var"><div class="name">Control · текущий</div><div class="conv">$32 ARPU</div><div class="delta" style="color:var(--mut)">base</div></div>
+          <div class="exp-var win"><div class="name">Вариант B · выше цены</div><div class="conv">$41 ARPU</div><div class="delta">+28% к base · p<0.01</div></div>
+        </div>
+      </div>
+      <div class="exp-card">
+        <div class="head"><div><h4>CTA на лендинге: «Попробовать» vs «Получить демо»</h4><small>Завершён 28.05.2026 · 14 дней · 18 240 юзеров</small></div><span class="pill lost">— Без эффекта</span></div>
+        <div class="exp-bars">
+          <div class="exp-var"><div class="name">«Попробовать бесплатно»</div><div class="conv">3.4%</div><div class="delta" style="color:var(--mut)">base</div></div>
+          <div class="exp-var"><div class="name">«Получить демо»</div><div class="conv">3.5%</div><div class="delta" style="color:var(--mut)">+2.9% · p=0.42</div></div>
+        </div>
+      </div>
+      <div class="exp-card">
+        <div class="head"><div><h4>Email-онбординг: 3 письма vs 7 писем</h4><small>Запущен 10.06.2026 · 8 дней · 3 240 юзеров</small></div><span class="pill running">● Запущен</span></div>
+        <div class="exp-bars">
+          <div class="exp-var"><div class="name">Control · 3 письма</div><div class="conv">21.4%</div><div class="delta" style="color:var(--mut)">D7 retention</div></div>
+          <div class="exp-var win"><div class="name">Вариант B · 7 писем</div><div class="conv">26.8%</div><div class="delta">+25.2% к base · p=0.04</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Integrations page -->
+    <div class="reveal" data-pages="integrations">
+      <div class="int-grid">
+        <div class="int-card" data-int="Slack"><span class="int-logo"><img src="icons/slack.svg" alt="Slack" loading="lazy"></span><div class="info"><b>Slack</b><small>Уведомления по метрикам и алерты</small></div><span class="status">Активно</span></div>
+        <div class="int-card" data-int="Telegram Bot"><span class="int-logo"><img src="icons/telegram.svg" alt="Telegram" loading="lazy"></span><div class="info"><b>Telegram Bot</b><small>Daily digest в команду</small></div><span class="status">Активно</span></div>
+        <div class="int-card" data-int="Google Analytics 4"><span class="int-logo"><img src="icons/googleanalytics.svg" alt="Google Analytics" loading="lazy"></span><div class="info"><b>Google Analytics 4</b><small>Импорт сессий и каналов</small></div><span class="status">Активно</span></div>
+        <div class="int-card" data-int="Stripe"><span class="int-logo"><img src="icons/stripe.svg" alt="Stripe" loading="lazy"></span><div class="info"><b>Stripe</b><small>Биллинг и MRR в реалтайме</small></div><span class="status">Активно</span></div>
+        <div class="int-card off" data-int="Mixpanel"><span class="int-logo"><img src="icons/mixpanel.svg" alt="Mixpanel" loading="lazy"></span><div class="info"><b>Mixpanel</b><small>Сбор продуктовых событий</small></div><span class="status off">Отключено</span></div>
+        <div class="int-card off" data-int="Intercom"><span class="int-logo"><img src="icons/intercom.svg" alt="Intercom" loading="lazy"></span><div class="info"><b>Intercom</b><small>Чат-сессии и NPS</small></div><span class="status off">Отключено</span></div>
+        <div class="int-card" data-int="HubSpot"><span class="int-logo"><img src="icons/hubspot.svg" alt="HubSpot" loading="lazy"></span><div class="info"><b>HubSpot</b><small>CRM и контакты</small></div><span class="status">Активно</span></div>
+        <div class="int-card off" data-int="Zapier"><span class="int-logo"><img src="icons/zapier.svg" alt="Zapier" loading="lazy"></span><div class="info"><b>Zapier</b><small>2000+ автоматизаций</small></div><span class="status off">Отключено</span></div>
+        <div class="int-card" id="addInt" style="border-style:dashed;justify-content:center;background:var(--surface-2)"><span style="color:var(--accent-2);font-weight:600;font-size:13.5px">+ Добавить интеграцию</span></div>
+      </div>
+    </div>
+
+    <!-- Settings page -->
+    <div class="reveal" data-pages="settings">
+      <div class="settings-card">
+        <h3>Профиль и команда</h3>
+        <div class="set-row"><div class="lbl"><b>Имя</b>Отображается в команде</div><input type="text" value="Mark K."></div>
+        <div class="set-row"><div class="lbl"><b>Email</b>Для логина и уведомлений</div><input type="email" value="mark@lumen-team.io"></div>
+        <div class="set-row"><div class="lbl"><b>Часовой пояс</b>Время в отчётах</div><select>
+          <option>(UTC−12:00) Бейкер</option>
+          <option>(UTC−11:00) Самоа · Паго-Паго</option>
+          <option>(UTC−10:00) Гонолулу · Гавайи</option>
+          <option>(UTC−09:00) Анкоридж · Аляска</option>
+          <option>(UTC−08:00) Лос-Анджелес · PST</option>
+          <option>(UTC−07:00) Денвер · Финикс</option>
+          <option>(UTC−06:00) Чикаго · Мехико</option>
+          <option>(UTC−05:00) Нью-Йорк · Богота</option>
+          <option>(UTC−04:00) Сантьяго · Каракас</option>
+          <option>(UTC−03:30) Сент-Джонс</option>
+          <option>(UTC−03:00) Буэнос-Айрес · Сан-Паулу</option>
+          <option>(UTC−02:00) Южная Георгия</option>
+          <option>(UTC−01:00) Азорские о-ва · Кабо-Верде</option>
+          <option>(UTC±00:00) Лондон · Дублин · Лиссабон</option>
+          <option>(UTC+01:00) Берлин · Париж · Мадрид · Варшава</option>
+          <option>(UTC+02:00) Киев · Афины · Каир · Йоханнесбург</option>
+          <option>(UTC+03:00) Москва · СПб · Стамбул · Минск</option>
+          <option>(UTC+03:30) Тегеран</option>
+          <option>(UTC+04:00) Дубай · Баку · Ереван · Тбилиси</option>
+          <option>(UTC+04:30) Кабул</option>
+          <option>(UTC+05:00) Екатеринбург · Ташкент · Карачи</option>
+          <option>(UTC+05:30) Дели · Мумбаи · Коломбо</option>
+          <option>(UTC+05:45) Катманду</option>
+          <option>(UTC+06:00) Омск · Алматы · Дакка</option>
+          <option>(UTC+06:30) Янгон</option>
+          <option selected>(UTC+07:00) Новосибирск · Томск · Красноярск · Бангкок</option>
+          <option>(UTC+08:00) Иркутск · Пекин · Сингапур · Гонконг</option>
+          <option>(UTC+08:45) Юклу (Австралия)</option>
+          <option>(UTC+09:00) Якутск · Токио · Сеул</option>
+          <option>(UTC+09:30) Дарвин · Аделаида</option>
+          <option>(UTC+10:00) Владивосток · Сидней · Гуам</option>
+          <option>(UTC+10:30) Лорд-Хау</option>
+          <option>(UTC+11:00) Магадан · Соломоновы о-ва · Нумеа</option>
+          <option>(UTC+12:00) Камчатка · Окленд · Фиджи</option>
+          <option>(UTC+12:45) Чатем</option>
+          <option>(UTC+13:00) Нукуалофа · Самоа · Апиа</option>
+          <option>(UTC+14:00) Кирибати · Лайн</option>
+        </select></div>
+        <div class="set-row"><div class="lbl"><b>Email-уведомления</b>Дайджест каждое утро</div><label class="toggle"><input type="checkbox" checked><span class="switch"></span></label></div>
+        <div class="set-row"><div class="lbl"><b>Slack-алерты</b>При резком оттоке или падении MRR</div><label class="toggle"><input type="checkbox" checked><span class="switch"></span></label></div>
+        <div class="set-row"><div class="lbl"><b>2FA</b>Двухфакторная аутентификация</div><label class="toggle"><input type="checkbox"><span class="switch"></span></label></div>
+        <div class="set-actions"><button class="btn btn-ghost">Отмена</button><button class="btn btn-pri">Сохранить</button></div>
+      </div>
+    </div>
+
+    <footer class="foot">
+      <div>© 2026 Lumen Analytics · Демонстрационный проект для портфолио · Все данные сгенерированы</div>
+      <div>Stack: HTML5 · CSS3 (Grid + Flex) · vanilla JS · SVG-графики · без зависимостей</div>
+    </footer>
+
+  </main>
+</div>
+</div>
+
+<script>
+function animateCount(el){
+  if(el.dataset.done)return;el.dataset.done=1;
+  var to=parseFloat(el.dataset.count),dec=parseInt(el.dataset.dec||0,10),t0=null,dur=1100;
+  function step(ts){if(!t0)t0=ts;var p=Math.min(1,(ts-t0)/dur);var e=1-Math.pow(1-p,3);
+    var v=to*e;
+    el.textContent=dec?v.toFixed(dec).replace('.',','):Math.round(v).toLocaleString('ru-RU');
+    if(p<1)requestAnimationFrame(step);else el.textContent=dec?to.toFixed(dec).replace('.',','):to.toLocaleString('ru-RU');}
+  requestAnimationFrame(step);
+}
+function revealNow(scope){
+  scope.querySelectorAll('.reveal').forEach(function(el){
+    if(el.style.display==='none')return;
+    el.classList.add('in');
+    el.querySelectorAll('[data-count]').forEach(animateCount);
+    el.querySelectorAll('.funnel-bar i[data-w], .bar-row .track i[data-w], .nps-row .bar i[data-w], .cc .bar i[data-w]').forEach(function(i){setTimeout(function(){i.style.width=i.dataset.w+'%'},120)});
+  });
+}
+
+var PAGES={
+  overview:{title:'Обзор продукта',greet:'Последние 30 дней · обновлено сейчас · <b>+18% MRR</b> к прошлому периоду',crumb:'Обзор'},
+  acquisition:{title:'Привлечение',greet:'Каналы трафика, UTM-разбивка и CAC по источникам · 30Д',crumb:'Привлечение'},
+  retention:{title:'Удержание',greet:'Причины оттока, NPS и win-back · обновлено сейчас',crumb:'Удержание'},
+  funnels:{title:'Воронки конверсии',greet:'Signup, активация, trial → paid, upgrade',crumb:'Воронки'},
+  cohorts:{title:'Когортная аналитика',greet:'Retention по неделям регистрации, retention curves',crumb:'Когорты'},
+  geo:{title:'География',greet:'Карта мира, MRR и ARPU по странам',crumb:'География'},
+  reports:{title:'Отчёты',greet:'Сохранённые и автоматические отчёты команды',crumb:'Отчёты'},
+  experiments:{title:'A/B-эксперименты',greet:'Активные тесты и результаты завершённых',crumb:'Эксперименты'},
+  integrations:{title:'Интеграции',greet:'Подключённые внешние сервисы и API',crumb:'Интеграции'},
+  settings:{title:'Настройки',greet:'Профиль, уведомления, безопасность',crumb:'Настройки'}
+};
+
+function goTo(slug){
+  if(!PAGES[slug])slug='overview';
+  document.querySelectorAll('.side .nav').forEach(function(a){a.classList.toggle('on',a.dataset.slug===slug)});
+  document.querySelectorAll('[data-pages]').forEach(function(sec){
+    var on=sec.dataset.pages.split(/\s+/).indexOf(slug)>=0;
+    sec.style.display=on?'':'none';
+  });
+  var head=document.querySelector('.page-head h1');if(head)head.textContent=PAGES[slug].title;
+  var greet=document.querySelector('.page-head .greet');if(greet)greet.innerHTML=PAGES[slug].greet;
+  var crumb=document.querySelector('.crumb b');if(crumb)crumb.textContent=PAGES[slug].crumb;
+  document.title='Lumen · '+PAGES[slug].title;
+  try{localStorage.setItem('lumen.page',slug)}catch(e){}
+  if(location.hash.replace('#','')!==slug){history.replaceState(null,'','#'+slug)}
+  document.querySelectorAll('.reveal').forEach(function(el){
+    el.classList.remove('in');
+    el.querySelectorAll('[data-count]').forEach(function(c){c.dataset.done='';c.textContent='0'});
+    el.querySelectorAll('.funnel-bar i[data-w], .bar-row .track i[data-w], .nps-row .bar i[data-w], .cc .bar i[data-w]').forEach(function(i){i.style.width='0'});
+  });
+  setTimeout(function(){revealNow(document)},40);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+document.querySelectorAll('.side .nav').forEach(function(a){
+  a.addEventListener('click',function(e){e.preventDefault();goTo(a.dataset.slug)});
+});
+
+document.querySelectorAll('.period button, .tabs button').forEach(function(b){
+  b.addEventListener('click',function(){
+    var siblings=b.parentNode.querySelectorAll('button');
+    siblings.forEach(function(s){s.classList.remove('on')});
+    b.classList.add('on');
+  });
+});
+
+window.addEventListener('hashchange',function(){
+  var s=(location.hash||'').replace('#','');
+  if(PAGES[s])goTo(s);
+});
+var initial='overview';
+var hash=(location.hash||'').replace('#','');
+if(hash&&PAGES[hash])initial=hash;
+else{try{var saved=localStorage.getItem('lumen.page');if(saved&&PAGES[saved])initial=saved}catch(e){}}
+goTo(initial);
+
+// === HEADER BUTTONS ===
+var toast=document.getElementById('toast');
+var toastTxt=document.getElementById('toastTxt');
+var toastTimer=null;
+function showToast(msg){
+  toastTxt.textContent=msg;
+  toast.classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(function(){toast.classList.remove('on')},2400);
+}
+
+// Share — copy current URL to clipboard
+document.getElementById('btnShare').addEventListener('click',function(){
+  var url=location.href;
+  var ok=function(){showToast('Ссылка скопирована')};
+  var fail=function(){showToast('Не удалось скопировать — '+url)};
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(ok).catch(function(){
+      try{
+        var ta=document.createElement('textarea');ta.value=url;ta.style.position='fixed';ta.style.opacity='0';
+        document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+        ok();
+      }catch(e){fail()}
+    });
+  }else{
+    try{
+      var ta=document.createElement('textarea');ta.value=url;ta.style.position='fixed';ta.style.opacity='0';
+      document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+      ok();
+    }catch(e){fail()}
+  }
+});
+
+// Notifications dropdown
+var notifBtn=document.getElementById('btnNotif');
+var notifPop=document.getElementById('notifPop');
+var notifDot=notifBtn.querySelector('.dot');
+notifBtn.addEventListener('click',function(e){
+  e.stopPropagation();
+  notifPop.classList.toggle('on');
+});
+document.addEventListener('click',function(e){
+  if(!notifPop.contains(e.target)&&e.target!==notifBtn){notifPop.classList.remove('on')}
+});
+document.getElementById('markRead').addEventListener('click',function(e){
+  e.stopPropagation();
+  notifPop.querySelectorAll('.unread').forEach(function(d){d.style.display='none'});
+  if(notifDot)notifDot.style.display='none';
+  showToast('Все уведомления прочитаны');
+});
+
+// New report — navigate to reports page
+document.getElementById('btnNewReport').addEventListener('click',function(){
+  goTo('reports');
+  showToast('Раздел «Отчёты» открыт');
+});
+
+// === MODAL ===
+var modalBg=document.getElementById('modalBg');
+var modalTitle=document.getElementById('modalTitle');
+var modalSub=document.getElementById('modalSub');
+var modalBody=document.getElementById('modalBody');
+var modalFoot=document.getElementById('modalFoot');
+function openModal(title,sub,bodyHtml,footHtml){
+  modalTitle.textContent=title;
+  modalSub.textContent=sub||'';
+  modalBody.innerHTML=bodyHtml;
+  modalFoot.innerHTML=footHtml||'<button class="btn btn-ghost" onclick="closeModal()">Закрыть</button>';
+  modalBg.classList.add('on');
+  document.body.style.overflow='hidden';
+}
+function closeModal(){
+  modalBg.classList.remove('on');
+  document.body.style.overflow='';
+}
+window.closeModal=closeModal;
+document.getElementById('modalClose').addEventListener('click',closeModal);
+modalBg.addEventListener('click',function(e){if(e.target===modalBg)closeModal()});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&modalBg.classList.contains('on'))closeModal()});
+
+// === REPORT CARDS ===
+var REPORTS={
+  mrr:{title:'Еженедельный MRR',sub:'Превью отчёта · последние 8 недель',svg:'<polyline points="0,80 60,72 120,65 180,55 240,48 300,38 360,28 420,18" fill="none" stroke="#0d9488" stroke-width="2.5"/><circle cx="420" cy="18" r="4" fill="#fff" stroke="#0d9488" stroke-width="2.5"/>',
+    rows:[['MRR на конец','$84 320'],['Прирост за неделю','+$3 240'],['New revenue','$12 400'],['Churn','−$2 800'],['Отчёт уходит','каждый понедельник 09:00 MSK'],['Получатели','команда (8 чел.)']]},
+  cohorts:{title:'Когорты по каналам',sub:'Retention по источникам · 6 когорт',svg:'<rect x="0" y="20" width="60" height="120" fill="#0d9488"/><rect x="70" y="40" width="60" height="100" fill="#14b8a6"/><rect x="140" y="60" width="60" height="80" fill="#5eead4"/><rect x="210" y="85" width="60" height="55" fill="#06b6d4"/><rect x="280" y="100" width="60" height="40" fill="#8b5cf6"/><rect x="350" y="115" width="60" height="25" fill="#ec4899"/>',
+    rows:[['Лучшая когорта','Referral · M3 retention 64%'],['Худшая когорта','Facebook · M3 retention 14%'],['Средний M1','53%'],['Формат','BI-дашборд (Metabase)'],['Доступ','growth + продакт']]},
+  churn:{title:'Churn-анализ',sub:'Кто и почему отвалился',svg:'<rect x="0" y="20" width="40" height="120" fill="#ef4444"/><rect x="50" y="50" width="40" height="90" fill="#f59e0b"/><rect x="100" y="80" width="40" height="60" fill="#8b5cf6"/><rect x="150" y="100" width="40" height="40" fill="#3b82f6"/><rect x="200" y="110" width="40" height="30" fill="#0d9488"/>',
+    rows:[['Churn за месяц','28 юзеров ($2 800)'],['Топ-причина','Дорого (34%)'],['Возможный win-back','9 юзеров · $1 240 LTV'],['Получатель','CEO (1-е число)']]},
+  funnel:{title:'Воронка signup → paid',sub:'Конверсия на каждом шаге',svg:'<rect x="0" y="0" width="420" height="22" fill="#0d9488"/><rect x="40" y="30" width="340" height="22" fill="#14b8a6"/><rect x="100" y="60" width="220" height="22" fill="#5eead4"/><rect x="150" y="90" width="120" height="22" fill="#06b6d4"/><rect x="190" y="120" width="40" height="22" fill="#8b5cf6"/>',
+    rows:[['End-to-end CR','1.80%'],['Worst drop-off','посетители → /pricing (58%)'],['Best step','email → активация (78%)'],['Slack-алерт','при падении CR > 0.5%']]},
+  geo:{title:'География юзеров',sub:'DAU и MRR по странам · 12 стран',svg:'<circle cx="100" cy="60" r="38" fill="#0d9488"/><circle cx="200" cy="80" r="28" fill="#14b8a6"/><circle cx="270" cy="60" r="22" fill="#5eead4"/><circle cx="330" cy="85" r="18" fill="#06b6d4"/><circle cx="380" cy="60" r="14" fill="#8b5cf6"/>',
+    rows:[['Топ-3','🇷🇺 4 580 · 🇰🇿 2 780 · 🇧🇾 1 890'],['Самый растущий','🇰🇿 Казахстан (+42%)'],['Самый прибыльный','🇮🇱 ARPU $48']]}
+};
+
+document.querySelectorAll('.rep-card').forEach(function(card){
+  card.addEventListener('click',function(){
+    var key=card.dataset.rep;
+    if(key==='new'){openCreateReportModal();return}
+    var r=REPORTS[key];if(!r)return;
+    var rows=r.rows.map(function(p){return '<div class="row"><div class="l">'+p[0]+'</div><div class="v">'+p[1]+'</div></div>'}).join('');
+    var html='<div class="prev"><svg viewBox="0 0 420 140" preserveAspectRatio="none">'+r.svg+'</svg></div>'+rows;
+    var foot='<button class="btn btn-ghost" onclick="closeModal()">Закрыть</button>'+
+             '<button class="btn btn-ghost" onclick="closeModal();window.__lumenToast(\'Отчёт скачан в PDF\')">Скачать PDF</button>'+
+             '<button class="btn btn-pri" onclick="closeModal();window.__lumenToast(\'Отчёт отправлен в команду\')">Отправить</button>';
+    openModal(r.title,r.sub,html,foot);
+  });
+});
+
+function openCreateReportModal(){
+  var html=
+    '<p>Выбери источник данных и формат — и я соберу новый отчёт.</p>'+
+    '<label>Название отчёта</label><input id="rpName" value="Мой отчёт ('+new Date().toLocaleDateString('ru-RU')+')">'+
+    '<label>Источник</label><select id="rpSrc"><option>MRR / выручка</option><option>Когорты</option><option>Воронка</option><option>География</option><option>Каналы привлечения</option></select>'+
+    '<label>Расписание</label><select id="rpSched"><option>Однократно</option><option>Ежедневно</option><option>Еженедельно (пн)</option><option>Ежемесячно (1-е)</option></select>'+
+    '<label>Получатели (email через запятую)</label><input id="rpTo" placeholder="team@lumen-team.io, mark@lumen-team.io">';
+  var foot='<button class="btn btn-ghost" onclick="closeModal()">Отмена</button>'+
+           '<button class="btn btn-pri" onclick="window.__createReport()">Создать</button>';
+  openModal('Новый отчёт','Шаблон или с нуля',html,foot);
+}
+window.__lumenToast=showToast;
+window.__createReport=function(){
+  var n=document.getElementById('rpName').value.trim()||'Без названия';
+  closeModal();
+  showToast('Отчёт «'+n+'» создан');
+};
+
+// === INTEGRATIONS ===
+document.querySelectorAll('.int-card[data-int]').forEach(function(card){
+  card.addEventListener('click',function(){
+    var name=card.dataset.int;
+    var st=card.querySelector('.status');
+    var off=card.classList.contains('off');
+    var foot=
+      '<button class="btn btn-ghost" onclick="closeModal()">Закрыть</button>'+
+      '<button class="btn btn-pri" onclick="window.__toggleInt(\''+name.replace(/'/g,"\\'")+'\')">'+(off?'Подключить':'Отключить')+'</button>';
+    var rows=[
+      ['Статус',off?'<span class="pill" style="background:var(--bg);color:var(--mut);padding:2px 9px;border-radius:100px;font-size:11px;font-weight:600">Отключено</span>':'<span class="pill" style="background:var(--green-soft);color:var(--green);padding:2px 9px;border-radius:100px;font-size:11px;font-weight:600">Активно</span>'],
+      ['Подключено',off?'—':'12 апреля 2026'],
+      ['Последний вызов',off?'—':'2 мин назад'],
+      ['Запросов за 24ч',off?'—':(Math.floor(Math.random()*900)+200).toString()]
+    ];
+    var rowsHtml=rows.map(function(p){return '<div class="row"><div class="l">'+p[0]+'</div><div class="v">'+p[1]+'</div></div>'}).join('');
+    openModal(name,'Подробности интеграции',rowsHtml,foot);
+  });
+});
+window.__toggleInt=function(name){
+  var card=document.querySelector('.int-card[data-int="'+name.replace(/"/g,'\\"')+'"]');
+  if(!card){closeModal();return}
+  var off=card.classList.toggle('off');
+  var st=card.querySelector('.status');
+  if(off){st.classList.add('off');st.textContent='Отключено'}
+  else{st.classList.remove('off');st.textContent='Активно'}
+  closeModal();
+  showToast(name+(off?' отключён':' подключён'));
+};
+document.getElementById('addInt').addEventListener('click',function(){
+  var html='<p>Выбери, какой сервис подключить. После подключения он появится в списке как «Активный».</p>'+
+    '<label>Сервис</label><select><option>Notion</option><option>HubSpot</option><option>Mixpanel</option><option>Amplitude</option><option>PostHog</option><option>Discord</option><option>Linear</option></select>'+
+    '<label>API-ключ или OAuth</label><input placeholder="sk_live_... или нажми OAuth ниже">';
+  var foot='<button class="btn btn-ghost" onclick="closeModal()">Отмена</button>'+
+           '<button class="btn btn-pri" onclick="closeModal();window.__lumenToast(\'Интеграция подключена\')">Подключить</button>';
+  openModal('Добавить интеграцию','Каталог из 40+ сервисов',html,foot);
+});
+
+// === WIN-BACK BUTTONS ===
+document.querySelectorAll('.wb-item .btn-mini').forEach(function(b){
+  b.addEventListener('click',function(e){
+    e.stopPropagation();
+    var name=b.closest('.wb-item').querySelector('.info b').textContent;
+    var action=b.textContent.trim();
+    showToast(action+' → '+name+' (отправлено)');
+    b.textContent='✓ Отправлено';
+    b.disabled=true;
+    b.style.opacity='.6';b.style.cursor='default';
+  });
+});
+
+// === SETTINGS BUTTONS ===
+document.querySelectorAll('.set-actions .btn-pri').forEach(function(b){
+  b.addEventListener('click',function(){showToast('Настройки сохранены')});
+});
+document.querySelectorAll('.set-actions .btn-ghost').forEach(function(b){
+  b.addEventListener('click',function(){
+    document.querySelectorAll('.settings-card input[type="text"]').forEach(function(i){i.value='Mark K.'});
+    document.querySelectorAll('.settings-card input[type="email"]').forEach(function(i){i.value='mark@lumen-team.io'});
+    showToast('Изменения отменены');
+  });
+});
+
+// === PERIOD BUTTONS — show toast ===
+document.querySelectorAll('.period button').forEach(function(b){
+  b.addEventListener('click',function(){
+    showToast('Период: '+b.textContent.trim());
+  });
+});
+
+// === COUNTRY CARDS — clickable ===
+document.querySelectorAll('.cc').forEach(function(c){
+  c.style.cursor='pointer';
+  c.addEventListener('click',function(){
+    var n=c.querySelector('.nm');
+    if(!n)return;
+    var country=n.firstChild.textContent.trim();
+    var num=c.querySelector('.vv').firstChild.textContent.trim();
+    var gr=c.querySelector('.gr').textContent.trim();
+    var flag=c.querySelector('.flag').textContent;
+    var rows=[['Юзеров',num],['Рост 30Д',gr],['Главные города',n.querySelector('small').textContent]];
+    var rowsHtml=rows.map(function(p){return '<div class="row"><div class="l">'+p[0]+'</div><div class="v">'+p[1]+'</div></div>'}).join('');
+    openModal(flag+' '+country,'Детали по региону',rowsHtml,
+      '<button class="btn btn-ghost" onclick="closeModal()">Закрыть</button>'+
+      '<button class="btn btn-pri" onclick="closeModal();window.__lumenToast(\'Дриллдаун по '+country+' открыт\')">Дриллдаун</button>');
+  });
+});
+
+// === EXPERIMENTS CARDS — clickable ===
+document.querySelectorAll('.exp-card').forEach(function(card){
+  card.style.cursor='pointer';
+  card.addEventListener('click',function(){
+    var title=card.querySelector('h4').textContent;
+    var meta=card.querySelector('small').textContent;
+    var pill=card.querySelector('.pill').textContent.trim();
+    var vars=card.querySelectorAll('.exp-var');
+    var rowsHtml='<div class="row"><div class="l">Статус</div><div class="v">'+pill+'</div></div>'+
+                 '<div class="row"><div class="l">Период</div><div class="v">'+meta+'</div></div>';
+    vars.forEach(function(v){
+      rowsHtml+='<div class="row"><div class="l">'+v.querySelector('.name').textContent+'</div><div class="v">'+v.querySelector('.conv').textContent+' · '+v.querySelector('.delta').textContent+'</div></div>';
+    });
+    openModal(title,'A/B-тест',rowsHtml,'<button class="btn btn-ghost" onclick="closeModal()">Закрыть</button>'+
+      '<button class="btn btn-pri" onclick="closeModal();window.__lumenToast(\'Применить победителя\')">Применить победителя</button>');
+  });
+});
+
+// === MRR CHART (data-driven, interactive, mode-switchable) ===
+var __mrrMode='all';
+function renderMrrChart(mode){
+  __mrrMode=mode||'all';
+  var host=document.getElementById('mrrChartHost');
+  if(!host)return;
+
+  // 31 daily samples: 19 мая → 18 июн 2026
+  var dates=['19 мая','20','21','22','23','24','25','26','27','28','29','30','31','1 июн','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18'];
+  var mrr=    [71400,71680,71950,72210,72480,72700,72980,73260,73510,73810,74110,74360,74680,74980,75290,75620,75940,76350,76720,77110,77580,78050,78540,79100,79680,80350,81020,81780,82480,83340,84320];
+  var newR=   [410,430,380,420,350,470,440,420,460,440,380,480,460,470,510,480,580,580,600,660,700,700,740,760,820,820,860,800,950,940,1060];
+  var expR=   [130,150,100,140,120,130,160,140,170,150,130,170,140,160,170,160,200,200,210,220,230,230,240,250,260,270,280,240,300,300,340];
+  var churn=  [260,280,220,290,200,240,240,260,290,230,200,260,280,260,290,210,230,240,280,230,220,230,250,220,260,240,250,240,290,260,280];
+
+  var N=dates.length;
+  var W=620,H=380;
+  var PL=58,PR=58,PT=30,PB=46;
+  var PW=W-PL-PR, PH=H-PT-PB;
+  // Left scale (MRR): 70k → 86k
+  var mrrMin=70000, mrrMax=86000;
+  // Right scale (flows): 0 → 1200
+  var flowMax=1200;
+
+  function xAt(i){return PL+(i/(N-1))*PW}
+  function yMrr(v){return PT+(1-(v-mrrMin)/(mrrMax-mrrMin))*PH}
+  function yFlow(v){return PT+(1-v/flowMax)*PH}
+
+  // In % mode we display MRR as % growth from baseline
+  var pctSeries=mrr.map(function(v){return (v/mrr[0]-1)*100});
+  var pctMin=0, pctMax=22;
+  function yPct(v){return PT+(1-(v-pctMin)/(pctMax-pctMin))*PH}
+  function pointsMrr(){return mrr.map(function(v,i){return xAt(i).toFixed(1)+','+yMrr(v).toFixed(1)}).join(' ')}
+  function pointsPct(){return pctSeries.map(function(v,i){return xAt(i).toFixed(1)+','+yPct(v).toFixed(1)}).join(' ')}
+  function pointsFlow(arr){return arr.map(function(v,i){return xAt(i).toFixed(1)+','+yFlow(v).toFixed(1)}).join(' ')}
+
+  var leftTicks=[70000,74000,78000,82000,86000];
+  var rightTicks=[0,300,600,900,1200];
+  var xLabelEvery=5;
+
+  var parts=[];
+  parts.push('<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none">');
+  parts.push('<defs><linearGradient id="mrrG" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0d9488" stop-opacity=".24"/><stop offset="100%" stop-color="#0d9488" stop-opacity="0"/></linearGradient></defs>');
+
+  // grid + left Y labels
+  if(__mrrMode==='pct'){
+    [0,5,10,15,20].forEach(function(v){
+      var y=yPct(v);
+      parts.push('<line x1="'+PL+'" y1="'+y+'" x2="'+(W-PR)+'" y2="'+y+'" stroke="#eef1f4" stroke-width="1"/>');
+      parts.push('<text x="'+(PL-10)+'" y="'+(y+3.5)+'" text-anchor="end" font-size="10.5" fill="#5e6e7d" font-family="JetBrains Mono,monospace" font-weight="500">+'+v+'%</text>');
+    });
+  } else {
+    leftTicks.forEach(function(v){
+      var y=yMrr(v);
+      parts.push('<line x1="'+PL+'" y1="'+y+'" x2="'+(W-PR)+'" y2="'+y+'" stroke="#eef1f4" stroke-width="1"/>');
+      parts.push('<text x="'+(PL-10)+'" y="'+(y+3.5)+'" text-anchor="end" font-size="10.5" fill="#5e6e7d" font-family="JetBrains Mono,monospace" font-weight="500">$'+(v/1000)+'k</text>');
+    });
+    // right Y labels — only in 'all' mode (when flow lines are visible)
+    if(__mrrMode==='all'){
+      rightTicks.forEach(function(v){
+        var y=yFlow(v);
+        parts.push('<text x="'+(W-PR+10)+'" y="'+(y+3.5)+'" text-anchor="start" font-size="10.5" fill="#5e6e7d" font-family="JetBrains Mono,monospace" font-weight="500">$'+v+'</text>');
+      });
+    }
+  }
+
+  // axes lines
+  parts.push('<line x1="'+PL+'" y1="'+PT+'" x2="'+PL+'" y2="'+(PT+PH)+'" stroke="#cdd6dd" stroke-width="1"/>');
+  parts.push('<line x1="'+PL+'" y1="'+(PT+PH)+'" x2="'+(W-PR)+'" y2="'+(PT+PH)+'" stroke="#cdd6dd" stroke-width="1"/>');
+  parts.push('<line x1="'+(W-PR)+'" y1="'+PT+'" x2="'+(W-PR)+'" y2="'+(PT+PH)+'" stroke="#cdd6dd" stroke-width="1"/>');
+
+  // axis captions
+  var leftCap=(__mrrMode==='pct'?'% РОСТА':'MRR · $');
+  parts.push('<text x="'+(PL-10)+'" y="'+(PT-10)+'" text-anchor="end" font-size="9.5" fill="#9aa7b3" font-family="JetBrains Mono,monospace" font-weight="600" letter-spacing="1">'+leftCap+'</text>');
+  if(__mrrMode==='all')parts.push('<text x="'+(W-PR+10)+'" y="'+(PT-10)+'" text-anchor="start" font-size="9.5" fill="#9aa7b3" font-family="JetBrains Mono,monospace" font-weight="600" letter-spacing="1">$ / ДЕНЬ</text>');
+
+  // x labels (every 5; last label always gets month suffix; right-anchored at end)
+  for(var i=0;i<N-1;i+=xLabelEvery){
+    parts.push('<text x="'+xAt(i)+'" y="'+(H-16)+'" text-anchor="middle" font-size="10.5" fill="#5e6e7d" font-family="JetBrains Mono,monospace" font-weight="500">'+dates[i]+'</text>');
+  }
+  var lastL=dates[N-1]; if(!/\s/.test(lastL))lastL=lastL+' июн';
+  parts.push('<text x="'+xAt(N-1)+'" y="'+(H-16)+'" text-anchor="end" font-size="10.5" fill="#5e6e7d" font-family="JetBrains Mono,monospace" font-weight="500">'+lastL+'</text>');
+
+  // MRR area + line (in mrr/all modes) OR % growth line (in pct mode)
+  if(__mrrMode==='pct'){
+    var pctPts=pointsPct();
+    parts.push('<path d="M'+xAt(0).toFixed(1)+','+yPct(pctSeries[0]).toFixed(1)+' L'+pctPts.split(' ').slice(1).join(' L')+' L'+xAt(N-1).toFixed(1)+','+(PT+PH).toFixed(1)+' L'+xAt(0).toFixed(1)+','+(PT+PH).toFixed(1)+' Z" fill="url(#mrrG)"/>');
+    parts.push('<polyline points="'+pctPts+'" fill="none" stroke="#0d9488" stroke-width="2.5" stroke-linejoin="round"/>');
+  } else {
+    var mrrPts=pointsMrr();
+    parts.push('<path d="M'+xAt(0).toFixed(1)+','+yMrr(mrr[0]).toFixed(1)+' L'+mrrPts.split(' ').slice(1).join(' L')+' L'+xAt(N-1).toFixed(1)+','+(PT+PH).toFixed(1)+' L'+xAt(0).toFixed(1)+','+(PT+PH).toFixed(1)+' Z" fill="url(#mrrG)"/>');
+    parts.push('<polyline points="'+mrrPts+'" fill="none" stroke="#0d9488" stroke-width="2.5" stroke-linejoin="round"/>');
+    if(__mrrMode==='all'){
+      parts.push('<polyline points="'+pointsFlow(newR)+'" fill="none" stroke="#06b6d4" stroke-width="2" stroke-linejoin="round"/>');
+      parts.push('<polyline points="'+pointsFlow(expR)+'" fill="none" stroke="#8b5cf6" stroke-width="1.8" stroke-dasharray="3 3"/>');
+      parts.push('<polyline points="'+pointsFlow(churn)+'" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="2 4"/>');
+    }
+  }
+
+  // dots (hidden, shown on hover) — track the active series
+  function yActive(i){return __mrrMode==='pct'?yPct(pctSeries[i]):yMrr(mrr[i])}
+  for(var i=0;i<N;i++){
+    parts.push('<circle class="mrr-dot" data-i="'+i+'" cx="'+xAt(i)+'" cy="'+yActive(i)+'" r="4" fill="#fff" stroke="#0d9488" stroke-width="2" opacity="0"/>');
+  }
+  // last point always visible
+  parts.push('<circle cx="'+xAt(N-1)+'" cy="'+yActive(N-1)+'" r="5" fill="#fff" stroke="#0d9488" stroke-width="2.5"/>');
+
+  // hover guide
+  parts.push('<line class="hover-line" x1="0" y1="'+PT+'" x2="0" y2="'+(PT+PH)+'" stroke="#0d9488" stroke-width="1" stroke-dasharray="3 3" opacity="0"/>');
+  parts.push('<rect class="hover-rect" x="'+PL+'" y="'+PT+'" width="'+PW+'" height="'+PH+'" fill="transparent" style="cursor:crosshair"/>');
+  parts.push('</svg>');
+  parts.push('<div class="chart-tooltip" id="chartTip"></div>');
+  host.innerHTML=parts.join('');
+
+  var svgEl=host.querySelector('svg');
+  var overlay=host.querySelector('.hover-rect');
+  var dots=host.querySelectorAll('.mrr-dot');
+  var hoverLine=host.querySelector('.hover-line');
+  var tip=host.querySelector('#chartTip');
+
+  function fmtN(n){return n.toLocaleString('ru-RU')}
+
+  overlay.addEventListener('mousemove',function(e){
+    var rect=svgEl.getBoundingClientRect();
+    var vx=(e.clientX-rect.left)*(W/rect.width);
+    var idx=Math.round((vx-PL)/PW*(N-1));
+    if(idx<0)idx=0;if(idx>N-1)idx=N-1;
+    dots.forEach(function(d){d.setAttribute('opacity','0')});
+    dots[idx].setAttribute('opacity','1');
+    var xPx=xAt(idx);
+    hoverLine.setAttribute('x1',xPx);
+    hoverLine.setAttribute('x2',xPx);
+    hoverLine.setAttribute('opacity','1');
+    var dLabel=dates[idx];
+    if(!/\s/.test(dLabel))dLabel+=(idx<=12?' мая':' июн');
+    var html='<div class="d">'+dLabel+' · 2026</div>';
+    if(__mrrMode==='pct'){
+      html+='<div class="r"><span class="dt" style="background:#0d9488"></span>Рост MRR<b>+'+pctSeries[idx].toFixed(1).replace('.',',')+'%</b></div>';
+      html+='<div class="r"><span class="dt" style="background:#9aa7b3"></span>База (19 мая)<b>$'+fmtN(mrr[0])+'</b></div>';
+      html+='<div class="r"><span class="dt" style="background:#0d9488"></span>Текущее MRR<b>$'+fmtN(mrr[idx])+'</b></div>';
+    } else {
+      html+='<div class="r"><span class="dt" style="background:#0d9488"></span>MRR<b>$'+fmtN(mrr[idx])+'</b></div>';
+      if(__mrrMode==='all'){
+        html+='<div class="r"><span class="dt" style="background:#06b6d4"></span>New<b>$'+fmtN(newR[idx])+'</b></div>';
+        html+='<div class="r"><span class="dt" style="background:#8b5cf6"></span>Expansion<b>$'+fmtN(expR[idx])+'</b></div>';
+        html+='<div class="r"><span class="dt" style="background:#ef4444"></span>Churned<b>−$'+fmtN(churn[idx])+'</b></div>';
+      }
+    }
+    tip.innerHTML=html;
+    var hostRect=host.getBoundingClientRect();
+    var xRel=(xPx/W)*hostRect.width;
+    var tipW=190;
+    var left=xRel+14;
+    if(left+tipW>hostRect.width-8)left=xRel-tipW-14;
+    if(left<8)left=8;
+    tip.style.left=left+'px';
+    tip.style.opacity='1';
+  });
+  overlay.addEventListener('mouseleave',function(){
+    dots.forEach(function(d){d.setAttribute('opacity','0')});
+    hoverLine.setAttribute('opacity','0');
+    tip.style.opacity='0';
+  });
+}
+renderMrrChart('all');
+
+// Wire MRR tabs to switch chart mode
+(function(){
+  var tabs=document.querySelectorAll('#mrrTabs button[data-mrr-mode]');
+  tabs.forEach(function(b){
+    b.addEventListener('click',function(){
+      tabs.forEach(function(t){t.classList.remove('on')});
+      b.classList.add('on');
+      renderMrrChart(b.dataset.mrrMode);
+    });
+  });
+})();
+
+// === RETENTION CURVE CHARTS (data-driven, with axes) ===
+function renderRetentionChart(hostId,series,weeks){
+  var host=document.getElementById(hostId);
+  if(!host)return;
+  var W=620,H=240,PL=42,PR=14,PT=16,PB=32;
+  var PW=W-PL-PR, PH=H-PT-PB;
+  function xAt(i){return PL+(i/(weeks.length-1))*PW}
+  function yAt(v){return PT+(1-v/100)*PH}
+  var parts=['<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" style="width:100%;height:240px;display:block">'];
+  [0,25,50,75,100].forEach(function(v){
+    var y=yAt(v);
+    parts.push('<line x1="'+PL+'" y1="'+y+'" x2="'+(W-PR)+'" y2="'+y+'" stroke="#eef1f4" stroke-width="1"/>');
+    parts.push('<text x="'+(PL-8)+'" y="'+(y+3.5)+'" text-anchor="end" font-size="10.5" fill="#5e6e7d" font-family="JetBrains Mono,monospace" font-weight="500">'+v+'%</text>');
+  });
+  parts.push('<line x1="'+PL+'" y1="'+PT+'" x2="'+PL+'" y2="'+(PT+PH)+'" stroke="#cdd6dd"/>');
+  parts.push('<line x1="'+PL+'" y1="'+(PT+PH)+'" x2="'+(W-PR)+'" y2="'+(PT+PH)+'" stroke="#cdd6dd"/>');
+  weeks.forEach(function(w,i){
+    parts.push('<text x="'+xAt(i)+'" y="'+(H-12)+'" text-anchor="middle" font-size="10.5" fill="#5e6e7d" font-family="JetBrains Mono,monospace" font-weight="500">'+w+'</text>');
+  });
+  series.forEach(function(s){
+    var pts=s.points.map(function(v,i){return xAt(i).toFixed(1)+','+yAt(v).toFixed(1)}).join(' ');
+    parts.push('<polyline points="'+pts+'" fill="none" stroke="'+s.color+'" stroke-width="2.4" stroke-linejoin="round"'+(s.dashed?' stroke-dasharray="4 4"':'')+'/>');
+    s.points.forEach(function(v,i){
+      parts.push('<circle cx="'+xAt(i)+'" cy="'+yAt(v)+'" r="3.5" fill="#fff" stroke="'+s.color+'" stroke-width="2"/>');
+    });
+  });
+  parts.push('</svg>');
+  host.innerHTML=parts.join('');
+}
+
+renderRetentionChart('retCurveHost',[
+  {name:'Все юзеры',color:'#0d9488',points:[100,72,55,42,33,28,24,22]},
+  {name:'Только платные',color:'#3b82f6',dashed:true,points:[100,80,68,55,48,42,38,35]}
+],['W0','W1','W2','W4','W6','W8','W10','W12']);
+
+renderRetentionChart('cohortCurveHost',[
+  {name:'Апрель 26',color:'#0d9488',points:[100,80,58,44,38,33,30,27]},
+  {name:'Май 26',color:'#3b82f6',points:[100,82,62,50,42,37,33,30]},
+  {name:'Июнь 26',color:'#8b5cf6',points:[100,84,66,54,46,40,36,33]}
+],['W0','W1','W2','W4','W6','W8','W10','W12']);
+
+</script>
+</body>
+</html>
